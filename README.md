@@ -1,4 +1,4 @@
-# EBI
+# Eris-ABI
 Eris ABI tool
 
 A simple tool for constructing transaction call data for ABI-enabled contracts.
