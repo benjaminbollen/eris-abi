@@ -47,7 +47,7 @@ func BuildDirTree() {
 		//create it
 		err = os.MkdirAll(Index, 0700)
 		if err != nil {
-			fmt.Errorf("Failed to create the abi root directory")
+			fmt.Errorf("Failed to create the abi index directory")
 		}
 	}
 
@@ -56,7 +56,23 @@ func BuildDirTree() {
 		//create it
 		err = os.MkdirAll(Raw, 0700)
 		if err != nil {
-			fmt.Errorf("Failed to create the abi root directory")
+			fmt.Errorf("Failed to create the abi raw directory")
 		}
 	}
+}
+
+func CheckDirTree() error {
+	if _, err := os.Stat(Root); err != nil {
+		return fmt.Errorf("Abi root directory does not exist.")
+	}
+
+	if _, err := os.Stat(Index); err != nil {
+		return fmt.Errorf("Abi index directory does not exist.")
+	}
+
+	if _, err := os.Stat(Raw); err != nil {
+		return fmt.Errorf("Abi raw directory does not exist.")
+	}
+
+	return nil
 }

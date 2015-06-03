@@ -13,7 +13,7 @@ import (
 //This file is for storage and retrieval functions of abi's in abi subdirectory
 
 //Write ABI []byte data into hash-named file 
-func WriteAbiFile(abiData []byte) error {
+func WriteAbiFile(abiData []byte) (string, error) {
 	//Construct file path based on data hash
 	abiHash := hex.EncodeToString(sha256.Sum(abiData))
 	abiPath := path.Join(Raw, abiHash)
@@ -21,43 +21,48 @@ func WriteAbiFile(abiData []byte) error {
 	//Write data
 	err := ioutil.WriteFile(abiPath, abiData, 0644)
 	if err != nil {
-		return err
+		return "", err
 	}
 
-	return nil
+	return abiHash, nil
 }
 
-func ReadAbiFile(abiPath string) ([]byte, error) {
+func ReadAbiFile(abiPath string) ([]byte, string, error) {
 	//Check it exists first
 	if _, err := os.Stat(abiPath); err != nil {
-		return nil, fmt.Errorf("Could not read ABI file %s: Does not Exist", abiPath)
+		return nil, "", fmt.Errorf("Could not read ABI file %s: Does not Exist", abiPath)
 	}
 
 	abiData, err := ioutil.ReadFile(abiPath)
 	if err != nil {
 		log.Println("Failed to read abi file:", err)
-		return nil, err
+		return nil, "", err
 	}
 
-	return abiData, nil
+	dataHash := hex.EncodeToString(sha256.Sum(abiData))
+
+	return abiData, dataHash, nil
 }
 
 func ReadAbiHash(abiHash string) ([]byte, error) {
 	abiPath := path.Join(Raw, abiHash)
 
-	abiData, err := ReadAbiFile(abiPath)
+	abiData, dataHash, err := ReadAbiFile(abiPath)
 	if err != nil {
-		return nil, err
+		return nil, "", err
 	}
 
-	return abiData, nil
+	if (dataHash != abiHash) {
+		return nil, "", fmt.Errorf("The retrieved Abi file's hash did not match requested")
+	}
+
+	return abiData, dataHash, nil
 }
 
 func VerifyAbiHash(abiPath, abiHash string) error {
-	abiData, err := ReadAbiFile(abiPath)
-	hash := hex.EncodeToString(sha256.Sum(abiData))
+	abiData, dataHash, err := ReadAbiFile(abiPath)
 
-	if (hash != abiHash) {
+	if (dataHash != abiHash) {
 		return fmt.Errorf("The abi data does not match its hash")
 	}
 
