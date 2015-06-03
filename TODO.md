@@ -14,7 +14,19 @@ use Cobra?
 
 Organization:
 
-cli.go - cli functions
-eris-abi.go - Eris-specific ABI management system stuff
-core.go - cli support functions
-main.go - app creation
+/cmd/eris-abi/main.go - app creation
+/cmd/eris-abi/cli.go - cli functions (calling on eris-abi)
+
+core.go - Eris-specific ABI management system stuff (package ebi)
+
+
+Eris ABI Folder structure:
+
+root: .eris/abi/
+
+abi file stored in root named as sha256 hash of abi contents
+
+indexes: .eris/abi/index
+
+Index files are json formatted. the name of the index is the "outer key" in the case of chainid/contractaddr pairs. Index name should be chainid the internal mapping would then map contract addr to abi hash.  
+

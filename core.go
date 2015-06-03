@@ -12,28 +12,6 @@ import (
 	"github.com/eris-ltd/epm-go/utils"
 )
 
-/*
-func corePack(fname string, data []string) (string, error){
-
-	fpath, err := ResolveAbiPath(fname)
-	if err != nil {
-		return "", err
-	}
-
-	abiSpec, err := ReadAbi(fpath)
-	if err != nil {
-		return "", err
-	}
-
-	tx, err := packArgsABI(abiSpec, data...)
-	if err != nil {
-		return "", err
-	}
-
-	return tx, nil
-}
-*/
-
 func ResolveAbiPath(fname string) (string, error){
 	//TODO: Handle finding abi stored in eris file structure
 	
@@ -61,6 +39,9 @@ func ReadFileAbi(fpath string) (abi.ABI, error) {
 	if err != nil {
 		log.Println("Failed to read abi file:", err)
 		return abi.NullABI, err
+	}
+	if len(abiData)==0 {
+		return abi.NullABI, nil
 	}
 
 	abiSpec := new(abi.ABI)
