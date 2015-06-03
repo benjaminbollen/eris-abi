@@ -1,4 +1,4 @@
-package main
+package ebi
 
 import (
 	"os"
@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"io/ioutil"
 	"encoding/hex"
-	"github.com/eris-ltd/ebi/abi"
+	"github.com/eris-ltd/eris-abi/abi"
 	"github.com/eris-ltd/epm-go/utils"
 )
 
@@ -85,7 +85,7 @@ func ReadJsonAbi(json string) (abi.ABI, error) {
 	return *abiSpec, nil
 }
 
-func packArgsABI(abiSpec abi.ABI, data ...string) (string, error) {
+func PackArgsABI(abiSpec abi.ABI, data ...string) (string, error) {
 //	packed := []string{}
 
 	funcName := data[0]

@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"github.com/codegangsta/cli"
+	"github.com/eris-ltd/eris-abi"
 )
 
 func cliPack(c *cli.Context) {
@@ -18,16 +19,16 @@ func cliPack(c *cli.Context) {
 	if (c.IsSet("file")) {
 		fname := c.String("file")
 
-		fpath, err := ResolveAbiPath(fname)
+		fpath, err := ebi.ResolveAbiPath(fname)
 		if err != nil {
 			return
 		}
 
-		abiSpec, err := ReadFileAbi(fpath)
+		abiSpec, err := ebi.ReadFileAbi(fpath)
 		if err != nil {
 			return
 		}
-		tx, err := packArgsABI(abiSpec, args...)
+		tx, err := ebi.PackArgsABI(abiSpec, args...)
 		ifExit(err)
 		fmt.Printf("%s\n", tx)
 		return
@@ -38,11 +39,11 @@ func cliPack(c *cli.Context) {
 		json := c.String("json")
 		fmt.Println(json)
 
-		abiSpec, err := ReadJsonAbi(json)
+		abiSpec, err := ebi.ReadJsonAbi(json)
 		if err != nil {
 			return
 		}
-		tx, _ := packArgsABI(abiSpec, args...)
+		tx, _ := ebi.PackArgsABI(abiSpec, args...)
 
 		ifExit(err)
 		fmt.Printf("%s\n", tx)
