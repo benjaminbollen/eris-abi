@@ -12,6 +12,7 @@ import (
 	"github.com/eris-ltd/epm-go/utils"
 )
 
+/*
 func corePack(fname string, data []string) (string, error){
 
 	fpath, err := ResolveAbiPath(fname)
@@ -31,6 +32,7 @@ func corePack(fname string, data []string) (string, error){
 
 	return tx, nil
 }
+*/
 
 func ResolveAbiPath(fname string) (string, error){
 	//TODO: Handle finding abi stored in eris file structure
@@ -43,7 +45,12 @@ func ResolveAbiPath(fname string) (string, error){
 	return path.Join(wd, fname), nil
 }
 
-func ReadAbi(fpath string) (abi.ABI, error) {
+func BlankAbi() (abi.ABI) {
+	abi := new(abi.ABI)
+	return *abi
+}
+
+func ReadFileAbi(fpath string) (abi.ABI, error) {
 
 	if _, err := os.Stat(fpath); err != nil {
 		log.Println("Abi doesn't exist for", fpath)
@@ -55,6 +62,19 @@ func ReadAbi(fpath string) (abi.ABI, error) {
 		log.Println("Failed to read abi file:", err)
 		return abi.NullABI, err
 	}
+
+	abiSpec := new(abi.ABI)
+	if err := abiSpec.UnmarshalJSON(abiData); err != nil {
+		log.Println("failed to unmarshal", err)
+		return abi.NullABI, err
+	}
+
+	return *abiSpec, nil
+}
+
+func ReadJsonAbi(json string) (abi.ABI, error) {
+
+	abiData := []byte(json)
 
 	abiSpec := new(abi.ABI)
 	if err := abiSpec.UnmarshalJSON(abiData); err != nil {

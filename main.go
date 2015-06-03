@@ -12,6 +12,7 @@ import (
 var (
 	DefaultDir  = path.Join(utils.Decerver, "contracts")
 	DefaultFile = ""
+	DefaultJson = ""
 
 	DefaultHost = "localhost"
 	DefaultPort = "4592"
@@ -41,13 +42,20 @@ var (
 		Action: cliPack,
 		Flags: []cli.Flag{
 			fileFlag,
+			jsonFlag,
 		},
 	}
 
 	fileFlag = cli.StringFlag{
-		Name:  "file",
+		Name:  "file, f",
 		Value: DefaultFile,
 		Usage: "Specify the ABI file (Containing JSON ABI) to use",
+	}
+
+	jsonFlag = cli.StringFlag{
+		Name:	"json, j",
+		Value:	DefaultJson,
+		Usage: "Pass JSON-formatted ABI",
 	}
 )
 
