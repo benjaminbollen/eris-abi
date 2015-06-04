@@ -4,15 +4,23 @@ Accept JSON --json jsonabi
 
 abi storage
 
+restructure core.go to be more useful.
+
+hash flag
+
 =======================FINISHED LINE=====================
 
---hash flag / restructure core.go to be more useful.
-
-abi indexing
+--> abi indexing
+	- Resolve indexfile Key pair
+	- ReadIndex (return index object)
+	- WriteIndex (dowit)
+	- EditIndex (set key value)
 
 accept chainid, contract pair (chainid should be able to be an ENV)
 
 Server
+
+add completion functionality (chainid, hash ...)
 
 Cleanup + Documentation
 

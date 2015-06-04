@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"path"
 	"strconv"
-//	"io/ioutil"
 	"encoding/hex"
 	"github.com/eris-ltd/eris-abi/abi"
 	"github.com/eris-ltd/epm-go/utils"
@@ -42,7 +41,6 @@ func MakeAbi(abiData []byte) (abi.ABI, error) {
 }
 
 func PackArgsABI(abiSpec abi.ABI, data ...string) (string, error) {
-//	packed := []string{}
 
 	funcName := data[0]
 	args := data[1:]
@@ -77,15 +75,6 @@ func Packer(abiData []byte, data... string) (string, error) {
 
 	return tx, nil
 }
-/*
-func StringPacker(abiDataString string, data... string) {
-	//Is this stupid?
-	abiData := []byte(abiDataString)
-	tx, err := Packer(abiData, data)
-	return tx, err
-}
-*/
-
 
 func coerceHex(aa string, padright bool) string {
 	if !utils.IsHex(aa) {
@@ -104,51 +93,3 @@ func coerceHex(aa string, padright bool) string {
 	}
 	return aa
 }
-
-
-
-
-
-
-/*
-
-func ReadFileAbi(fpath string) (abi.ABI, error) {
-
-	if _, err := os.Stat(fpath); err != nil {
-		log.Println("Abi doesn't exist for", fpath)
-		return abi.NullABI, err
-	}
-
-	abiData, err := ioutil.ReadFile(fpath)
-	if err != nil {
-		log.Println("Failed to read abi file:", err)
-		return abi.NullABI, err
-	}
-	if len(abiData)==0 {
-		return abi.NullABI, nil
-	}
-
-	abiSpec := new(abi.ABI)
-	if err := abiSpec.UnmarshalJSON(abiData); err != nil {
-		log.Println("failed to unmarshal", err)
-		return abi.NullABI, err
-	}
-
-	return *abiSpec, nil
-}
-*/
-/*
-func ReadJsonAbi(json string) (abi.ABI, error) {
-
-	abiData := []byte(json)
-
-	abiSpec := new(abi.ABI)
-	if err := abiSpec.UnmarshalJSON(abiData); err != nil {
-		log.Println("failed to unmarshal", err)
-		return abi.NullABI, err
-	}
-
-	return *abiSpec, nil
-}
-*/
-

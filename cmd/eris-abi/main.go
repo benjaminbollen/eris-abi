@@ -10,9 +10,7 @@ import (
 )
 
 var (
-	DefaultDir  = path.Join(utils.Decerver, "contracts")
-	DefaultFile = ""
-	DefaultJson = ""
+	DefaultInput = "id"
 
 	DefaultHost = "localhost"
 	DefaultPort = "4592"
@@ -41,21 +39,22 @@ var (
 		Usage:  "generate a transaction",
 		Action: cliPack,
 		Flags: []cli.Flag{
-			fileFlag,
-			jsonFlag,
+			inputFlag,
+			chainidFlag,
 		},
 	}
 
-	fileFlag = cli.StringFlag{
-		Name:  "file, f",
-		Value: DefaultFile,
-		Usage: "Specify the ABI file (Containing JSON ABI) to use",
+	inputFlag = cli.StringFlag{
+		Name: "input",
+		Value: DefaultInput,
+		Usage: "Specify input method of ABI data.",
 	}
 
-	jsonFlag = cli.StringFlag{
-		Name:	"json, j",
-		Value:	DefaultJson,
-		Usage: "Pass JSON-formatted ABI",
+	chainidFlag = cli.StringFlag{
+		Name: "chainid, i",
+		Value: DefaultChainId,
+		Usage: "Specify Chainid to use as look-up",
+		EnvVar: "ERIS_HEAD"
 	}
 )
 
