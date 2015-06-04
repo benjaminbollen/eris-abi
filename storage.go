@@ -3,11 +3,12 @@ package ebi
 import (
 	"os"
 	"fmt"
+	"log"
 	"path"
 	"io/ioutil"
 	"encoding/hex"
 	"crypto/sha256"
-	"github.com/eris-ltd/eris-cli/util"
+//	"github.com/eris-ltd/eris-cli/util"
 )
 
 //This file is for storage and retrieval functions of abi's in abi subdirectory
@@ -15,7 +16,8 @@ import (
 //Write ABI []byte data into hash-named file 
 func WriteAbiFile(abiData []byte) (string, error) {
 	//Construct file path based on data hash
-	abiHash := hex.EncodeToString(sha256.Sum(abiData))
+	hash := sha256.Sum256(abiData)
+	abiHash := hex.EncodeToString(hash[:])
 	abiPath := path.Join(Raw, abiHash)
 
 	//Write data
@@ -39,12 +41,13 @@ func ReadAbiFile(abiPath string) ([]byte, string, error) {
 		return nil, "", err
 	}
 
-	dataHash := hex.EncodeToString(sha256.Sum(abiData))
+	dataHash := sha256.Sum256(abiData)
+	hashStr := hex.EncodeToString(dataHash[:])
 
-	return abiData, dataHash, nil
+	return abiData, hashStr, nil
 }
 
-func ReadAbiHash(abiHash string) ([]byte, error) {
+func ReadAbiHash(abiHash string) ([]byte, string, error) {
 	abiPath := path.Join(Raw, abiHash)
 
 	abiData, dataHash, err := ReadAbiFile(abiPath)
@@ -60,7 +63,10 @@ func ReadAbiHash(abiHash string) ([]byte, error) {
 }
 
 func VerifyAbiHash(abiPath, abiHash string) error {
-	abiData, dataHash, err := ReadAbiFile(abiPath)
+	_, dataHash, err := ReadAbiFile(abiPath)
+	if err != nil {
+		return err
+	}
 
 	if (dataHash != abiHash) {
 		return fmt.Errorf("The abi data does not match its hash")
@@ -76,12 +82,12 @@ func VerifyAbiFile(abiPath string) error {
 		return fmt.Errorf("Could not read ABI file %s: Does not Exist", abiPath)
 	}
 
-	filename = finfo.Name()
+	filename := finfo.Name()
 
 	//Check filename is a hexstring
-	_, err := hex.DecodeString(filename)
+	_, err = hex.DecodeString(filename)
 	if err != nil {
-		return fmt.Errorf("File name %s is not a hex string. Can't Compare" filename)
+		return fmt.Errorf("File name %s is not a hex string. Can't Compare", filename)
 	}
 
 	return VerifyAbiHash(abiPath, filename)

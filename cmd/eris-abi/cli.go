@@ -19,33 +19,26 @@ func cliPack(c *cli.Context) {
 	if (c.IsSet("file")) {
 		fname := c.String("file")
 
-		fpath, err := ebi.ResolveAbiPath(fname)
-		if err != nil {
-			return
-		}
-
-		abiSpec, err := ebi.ReadFileAbi(fpath)
-		if err != nil {
-			return
-		}
-		tx, err := ebi.PackArgsABI(abiSpec, args...)
+		fpath, err := ebi.PathFromHere(fname)
 		ifExit(err)
+
+		abiData, _, err := ebi.ReadAbiFile(fpath)
+		ifExit(err)
+
+		tx, err := ebi.Packer(abiData, args...)
+		ifExit(err)
+
 		fmt.Printf("%s\n", tx)
 		return
 	}
 
 	//When using --json flag, directly feed json into abi conversion
 	if (c.IsSet("json")) {
-		json := c.String("json")
-		fmt.Println(json)
+		json := []byte(c.String("json"))
 
-		abiSpec, err := ebi.ReadJsonAbi(json)
-		if err != nil {
-			return
-		}
-		tx, _ := ebi.PackArgsABI(abiSpec, args...)
-
+		tx, err := ebi.Packer(json, args...)
 		ifExit(err)
+
 		fmt.Printf("%s\n", tx)
 		return
 	}
