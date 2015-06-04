@@ -7,8 +7,7 @@ import (
 )
 
 func cliPack(c *cli.Context) {
-	//Check only one abi specification method has been used
-	input := c.String(input)
+	input := c.String("input")
 
 	args := c.Args()
 
@@ -29,7 +28,7 @@ func cliPack(c *cli.Context) {
 
 		fmt.Printf("%s\n", tx)
 		return
-	} else if (input == "json")
+	} else if (input == "json") {
 		//When using json input method, read json-abi string from command line
 		json := []byte(args[0])
 		data := args[1:]
@@ -44,7 +43,7 @@ func cliPack(c *cli.Context) {
 		hash := args[0]
 		data := args[1:]
 
-		abiData, _, err := ebi.ReadAbiFile(hash)
+		abiData, _, err := ebi.ReadAbi(hash)
 		ifExit(err)
 
 		tx, err := ebi.Packer(abiData, data...)
@@ -58,7 +57,7 @@ func cliPack(c *cli.Context) {
 		data := args[1:]
 		ifExit(err)
 
-		abiData, _, err := ebi.ReadAbiFile(hash)
+		abiData, _, err := ebi.ReadAbi(hash)
 		ifExit(err)
 
 		tx, err := ebi.Packer(abiData, data...)
@@ -68,7 +67,51 @@ func cliPack(c *cli.Context) {
 		return
 
 	} else {
-		err = fmt.Errorf("Unrecognized input method: %s", input)
+		err := fmt.Errorf("Unrecognized input method: %s\n", input)
 		ifExit(err)
 	}
+}
+
+func cliImport(c *cli.Context) {
+	//Import an abi file into abi directory
+	args := c.Args()
+	fname := args[0]
+
+	fpath, err := ebi.PathFromHere(fname)
+	ifExit(err)
+
+	abiData, abiHash, err := ebi.ReadAbiFile(fpath)
+	ifExit(err)
+
+	_, err = ebi.WriteAbi(abiData)
+	ifExit(err)
+
+	fmt.Printf("Imported Abi as %s\n", abiHash)
+	return
+}
+
+func cliAdd(c *cli.Context) {
+	//Add an entry to index
+	args := c.Args()
+	iname := args[0]
+	key := args[1]
+	value := args[2]
+
+	err := ebi.AddEntry(iname, key, value)
+	ifExit(err)
+
+	fmt.Printf("Added Entry %s as %s\n", value, key)
+	return
+}
+
+func cliNew(c *cli.Context) {
+	//Create new index
+	args := c.Args()
+	iname := args[0]
+
+	err := ebi.NewIndex(iname)
+	ifExit(err)
+
+	fmt.Printf("Created new index: %s\n", iname)
+	return
 }

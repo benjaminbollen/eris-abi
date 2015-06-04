@@ -3,10 +3,8 @@ package main
 import (
 	"fmt"
 	"os"
-	"path"
-
 	"github.com/codegangsta/cli"
-	"github.com/eris-ltd/epm-go/utils" //Using non-standard directory for abi storage
+	"github.com/eris-ltd/eris-abi"
 )
 
 var (
@@ -26,13 +24,32 @@ func main() {
 	app.Email = "contact@erisindustries.com"
 	app.Commands = []cli.Command{
 		packCmd,
+		importCmd,
+		addCmd,
+		newCmd,
+	}
+
+	app.Before = func(c *cli.Context) error{
+		//Check directory structure exists. If not create it.
+		err := ebi.CheckDirTree()
+		if err != nil {
+			//Tree does not exist or is incomplete
+			fmt.Println("Abi directory tree incomplete... Creating it...")
+			err := ebi.BuildDirTree()
+			if err != nil {
+				fmt.Println("Could not build: %s", err)
+				return fmt.Errorf("Could not create directory tree")
+			}
+			fmt.Println("Directory tree built!")
+		}
+
+		return nil
 	}
 
 	app.Run(os.Args)
 
 }
 
-//Excessive structuring to not prohibit future expansion of this tool
 var (
 	packCmd = cli.Command{
 		Name:   "pack",
@@ -44,6 +61,24 @@ var (
 		},
 	}
 
+	importCmd = cli.Command{
+		Name:	"import",
+		Usage:	"Import an existing ABI file into abi directory",
+		Action:	cliImport,
+	}
+
+	addCmd = cli.Command{
+		Name: 	"add",
+		Usage:	"Add an entry to index",
+		Action:	cliAdd,
+	}
+
+	newCmd = cli.Command{
+		Name: 	"new",
+		Usage:	"Create new index",
+		Action:	cliNew,
+	}
+
 	inputFlag = cli.StringFlag{
 		Name: "input",
 		Value: DefaultInput,
@@ -52,9 +87,8 @@ var (
 
 	chainidFlag = cli.StringFlag{
 		Name: "chainid, i",
-		Value: DefaultChainId,
 		Usage: "Specify Chainid to use as look-up",
-		EnvVar: "ERIS_HEAD"
+		EnvVar: "ERIS_HEAD",
 	}
 )
 

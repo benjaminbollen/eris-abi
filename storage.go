@@ -8,13 +8,12 @@ import (
 	"io/ioutil"
 	"encoding/hex"
 	"crypto/sha256"
-//	"github.com/eris-ltd/eris-cli/util"
 )
 
 //This file is for storage and retrieval functions of abi's in abi subdirectory
 
 //Write ABI []byte data into hash-named file 
-func WriteAbiFile(abiData []byte) (string, error) {
+func WriteAbi(abiData []byte) (string, error) {
 	//Construct file path based on data hash
 	hash := sha256.Sum256(abiData)
 	abiHash := hex.EncodeToString(hash[:])
@@ -47,7 +46,7 @@ func ReadAbiFile(abiPath string) ([]byte, string, error) {
 	return abiData, hashStr, nil
 }
 
-func ReadAbiHash(abiHash string) ([]byte, string, error) {
+func ReadAbi(abiHash string) ([]byte, string, error) {
 	abiPath := path.Join(Raw, abiHash)
 
 	abiData, dataHash, err := ReadAbiFile(abiPath)
@@ -60,6 +59,20 @@ func ReadAbiHash(abiHash string) ([]byte, string, error) {
 	}
 
 	return abiData, dataHash, nil
+}
+
+func ImportAbi(abiPath string) (string, error) {
+	abiData, _, err := ReadAbiFile(abiPath)
+	if err != nil {
+		return "", err
+	}
+
+	abiHash, err := WriteAbi(abiData)
+	if err != nil {
+		return "", err
+	}
+
+	return abiHash, nil
 }
 
 func VerifyAbiHash(abiPath, abiHash string) error {

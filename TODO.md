@@ -8,19 +8,30 @@ restructure core.go to be more useful.
 
 hash flag
 
-=======================FINISHED LINE=====================
-
---> abi indexing
+abi indexing
 	- Resolve indexfile Key pair
 	- ReadIndex (return index object)
 	- WriteIndex (dowit)
 	- EditIndex (set key value)
 
+import abi
+
 accept chainid, contract pair (chainid should be able to be an ENV)
+
+=======================FINISHED LINE=====================
 
 Server
 
+--- Push point
+
+import index
+
+utils--v
+better file handling (if absolute path don't prepend cwd)
+
 add completion functionality (chainid, hash ...)
+
+--- Push point
 
 Cleanup + Documentation
 

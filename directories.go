@@ -12,7 +12,7 @@ func GetAbiRoot() string {
 	if (os.Getenv("ERIS_ABI_ROOT") != "") {
 		abiroot = os.Getenv("ERIS_ABI_ROOT")
 	} else {
-		path.Join(util.UserErisDir(), "abi")
+		abiroot = path.Join(util.UserErisDir(), "abi")
 	}
 	return abiroot
 }
@@ -32,13 +32,13 @@ var (
 	Raw = path.Join(Root, "raw")
 )
 
-func BuildDirTree() {
+func BuildDirTree() error {
 	//Check if abi root exists.
 	if _, err := os.Stat(Root); err != nil {
 		//create it
 		err = os.MkdirAll(Root, 0700)
 		if err != nil {
-			fmt.Errorf("Failed to create the abi root directory")
+			return fmt.Errorf("Failed to create the abi root directory")
 		}
 	}
 
@@ -47,7 +47,7 @@ func BuildDirTree() {
 		//create it
 		err = os.MkdirAll(Index, 0700)
 		if err != nil {
-			fmt.Errorf("Failed to create the abi index directory")
+			return fmt.Errorf("Failed to create the abi index directory")
 		}
 	}
 
@@ -56,9 +56,11 @@ func BuildDirTree() {
 		//create it
 		err = os.MkdirAll(Raw, 0700)
 		if err != nil {
-			fmt.Errorf("Failed to create the abi raw directory")
+			return fmt.Errorf("Failed to create the abi raw directory")
 		}
 	}
+
+	return nil
 }
 
 func CheckDirTree() error {
