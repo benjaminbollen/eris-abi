@@ -20,11 +20,13 @@ accept chainid, contract pair (chainid should be able to be an ENV)
 
 =======================FINISHED LINE=====================
 
-Server
+pack server
 
 --- Push point
 
 Tests
+
+index functions added to server?
 
 --- Push point
 

@@ -32,6 +32,12 @@ var (
 	Raw = path.Join(Root, "raw")
 )
 
+func InitPaths() {
+	Root = GetAbiRoot()
+	Index = path.Join(Root, "index")
+	Raw = path.Join(Root, "raw")
+}
+
 func BuildDirTree() error {
 	//Check if abi root exists.
 	if _, err := os.Stat(Root); err != nil {

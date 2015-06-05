@@ -70,13 +70,7 @@ func packHandler(w http.ResponseWriter, r *http.Request) {
 	} else if (input == "hash") {
 		hash := r.Header.Get("hash")
 
-		abiData, _, err := ebi.ReadAbi(hash)
-		if err != nil {
-			WriteError(w, err)
-			return
-		}
-
-		tx, err := ebi.Packer(abiData, args...)
+		tx, err := ebi.HashPack(hash, args...)
 		if err != nil {
 			WriteError(w, err)
 			return
@@ -96,20 +90,7 @@ func packHandler(w http.ResponseWriter, r *http.Request) {
 			WriteError(w, fmt.Errorf("A key for the index MUST be specified"))
 		}
 
-		hash, err := ebi.IndexResolve(index, key)
-
-		if err != nil {
-			WriteError(w, err)
-			return
-		}
-
-		abiData, _, err := ebi.ReadAbi(hash)
-		if err != nil {
-			WriteError(w, err)
-			return
-		}
-
-		tx, err := ebi.Packer(abiData, args...)
+		tx, err := ebi.IndexPack(index, key, args...)
 		if err != nil {
 			WriteError(w, err)
 			return

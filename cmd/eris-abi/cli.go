@@ -17,13 +17,7 @@ func cliPack(c *cli.Context) {
 		fname := args[0]
 		data := args[1:]
 
-		fpath, err := ebi.PathFromHere(fname)
-		ifExit(err)
-
-		abiData, _, err := ebi.ReadAbiFile(fpath)
-		ifExit(err)
-
-		tx, err := ebi.Packer(abiData, data...)
+		tx, err := ebi.FilePack(fname, data...)
 		ifExit(err)
 
 		fmt.Printf("%s\n", tx)
@@ -43,24 +37,18 @@ func cliPack(c *cli.Context) {
 		hash := args[0]
 		data := args[1:]
 
-		abiData, _, err := ebi.ReadAbi(hash)
-		ifExit(err)
-
-		tx, err := ebi.Packer(abiData, data...)
+		tx, err := ebi.HashPack(hash, data...)
 		ifExit(err)
 
 		fmt.Printf("%s\n", tx)
 		return
 	} else if (input == "index") {
-		//The id input method uses the indexing system
-		hash, err := ebi.IndexResolve(c.String("index"), args[0])
+		//The index input method uses the indexing system
+		index := c.String("index")
+		key := args[0]
 		data := args[1:]
-		ifExit(err)
 
-		abiData, _, err := ebi.ReadAbi(hash)
-		ifExit(err)
-
-		tx, err := ebi.Packer(abiData, data...)
+		tx, err := ebi.IndexPack(index, key, data...)
 		ifExit(err)
 
 		fmt.Printf("%s\n", tx)

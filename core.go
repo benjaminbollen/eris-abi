@@ -12,13 +12,17 @@ import (
 )
 
 func PathFromHere(fname string) (string, error){
-	
-	wd, err := os.Getwd()
-	if err != nil {
-		return "", err
-	}
+	//Check for absolute path
+	if (!path.IsAbs(fname)){
+		wd, err := os.Getwd()
+		if err != nil {
+			return "", err
+		}
 
-	return path.Join(wd, fname), nil
+		return path.Join(wd, fname), nil
+	} else {
+		return fname, nil
+	}
 }
 
 //Use the indexing system to pull out file path
@@ -92,4 +96,64 @@ func coerceHex(aa string, padright bool) string {
 		}
 	}
 	return aa
+}
+
+
+//Convenience Packing Functions
+
+// filePack: Read abi data from specified file
+func FilePack(filename string, args... string) (string, error){
+	filepath, err := PathFromHere(filename)
+	if err != nil {
+		return "", err
+	}
+
+	abiData, _, err := ReadAbiFile(filepath)
+	if err != nil {
+		return "", err
+	}
+
+	tx, err := Packer(abiData, args...)
+	if err != nil {
+		return "", err
+	}
+
+	return tx, nil
+}
+
+// jsonPack not needed: use Packer
+
+// hashPack: Read abi Data from ebi-tree with supplied hashPack
+func HashPack(hash string, args... string) (string, error){
+	abiData, _, err := ReadAbi(hash)
+	if err != nil {
+		return "", err
+	}
+
+	tx, err := Packer(abiData, args...)
+	if err != nil {
+		return "", err
+	}
+
+	return tx, nil
+}
+
+// indexPack: use the index system to fetch abi data
+func IndexPack(index string, key string, args... string) (string, error) {
+	hash, err := IndexResolve(index, key)
+	if err != nil {
+		return "", err
+	}
+
+	abiData, _, err := ReadAbi(hash)
+	if err != nil {
+		return "", err
+	}
+
+	tx, err := Packer(abiData, args...)
+	if err != nil {
+		return "", err
+	}
+
+	return tx, nil
 }
