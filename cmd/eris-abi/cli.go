@@ -51,9 +51,9 @@ func cliPack(c *cli.Context) {
 
 		fmt.Printf("%s\n", tx)
 		return
-	} else if (input == "id") {
+	} else if (input == "index") {
 		//The id input method uses the indexing system
-		hash, err := ebi.IndexResolve(c.String("chainid"), args[0])
+		hash, err := ebi.IndexResolve(c.String("index"), args[0])
 		data := args[1:]
 		ifExit(err)
 
@@ -114,4 +114,9 @@ func cliNew(c *cli.Context) {
 
 	fmt.Printf("Created new index: %s\n", iname)
 	return
+}
+
+func cliServer(c *cli.Context) {
+	host, port := c.String("host"), c.String("port")
+	ifExit(ListenAndServe(host, port))
 }

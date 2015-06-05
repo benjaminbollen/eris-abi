@@ -8,7 +8,8 @@ import (
 )
 
 var (
-	DefaultInput = "id"
+	DefaultInput = "index"
+	DefaultIndex = os.Getenv("ERIS_HEAD") 
 
 	DefaultHost = "localhost"
 	DefaultPort = "4592"
@@ -27,6 +28,7 @@ func main() {
 		importCmd,
 		addCmd,
 		newCmd,
+		serverCmd,
 	}
 
 	app.Before = func(c *cli.Context) error{
@@ -57,7 +59,7 @@ var (
 		Action: cliPack,
 		Flags: []cli.Flag{
 			inputFlag,
-			chainidFlag,
+			indexFlag,
 		},
 	}
 
@@ -79,16 +81,38 @@ var (
 		Action:	cliNew,
 	}
 
+	serverCmd = cli.Command{
+		Name:	"server",
+		Usage:	"Starts a packing server",
+		Action:	cliServer,
+		Flags:	[]cli.Flag{
+			hostFlag,
+			portFlag,
+		},
+	}
+
 	inputFlag = cli.StringFlag{
 		Name: "input",
 		Value: DefaultInput,
 		Usage: "Specify input method of ABI data.",
 	}
 
-	chainidFlag = cli.StringFlag{
-		Name: "chainid, i",
-		Usage: "Specify Chainid to use as look-up",
-		EnvVar: "ERIS_HEAD",
+	indexFlag = cli.StringFlag{
+		Name: 	"index, i",
+		Usage:	"Specify Chainid to use as look-up",
+		Value:	DefaultIndex,
+	}
+
+	portFlag = cli.StringFlag{
+		Name:  "port",
+		Value: DefaultPort,
+		Usage: "set the port for key daemon to listen on",
+	}
+
+	hostFlag = cli.StringFlag{
+		Name:  "host",
+		Value: DefaultHost,
+		Usage: "set the host for key daemon to listen on",
 	}
 )
 

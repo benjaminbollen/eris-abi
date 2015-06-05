@@ -24,18 +24,20 @@ Server
 
 --- Push point
 
-import index
-
-utils--v
-better file handling (if absolute path don't prepend cwd)
-
-add completion functionality (chainid, hash ...)
+Tests
 
 --- Push point
 
 Cleanup + Documentation
 
+--- Rework/Improvements ---
+
 use Cobra?
+
+utils--v
+better file handling (if absolute path don't prepend cwd)
+
+add completion functionality (chainid, hash ...)
 
 
 ________________________________________________________________
