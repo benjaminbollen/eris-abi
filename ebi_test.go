@@ -142,3 +142,7 @@ func TestIndexPack(t *testing.T) {
 		t.Fatalf("Output transaction did not match expected")
 	}
 }
+
+func TestNewIndex(t *testing.T) {
+	err := NewIndex()
+}

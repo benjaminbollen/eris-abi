@@ -67,12 +67,18 @@ var (
 		Name:	"import",
 		Usage:	"Import an existing ABI file into abi directory",
 		Action:	cliImport,
+		Flags: []cli.Flag{
+			inputFlag,
+		},
 	}
 
 	addCmd = cli.Command{
 		Name: 	"add",
 		Usage:	"Add an entry to index",
 		Action:	cliAdd,
+		Flags: []cli.Flag{
+			indexFlag,
+		},
 	}
 
 	newCmd = cli.Command{
@@ -99,7 +105,7 @@ var (
 
 	indexFlag = cli.StringFlag{
 		Name: 	"index, i",
-		Usage:	"Specify Chainid to use as look-up",
+		Usage:	"Specify index to use as look-up",
 		Value:	DefaultIndex,
 	}
 

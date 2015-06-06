@@ -63,27 +63,36 @@ func cliPack(c *cli.Context) {
 func cliImport(c *cli.Context) {
 	//Import an abi file into abi directory
 	args := c.Args()
-	fname := args[0]
 
-	fpath, err := ebi.PathFromHere(fname)
-	ifExit(err)
+	if (c.String("input")=="file"){
+		fname := args[0]
 
-	abiData, abiHash, err := ebi.ReadAbiFile(fpath)
-	ifExit(err)
+		fpath, err := ebi.PathFromHere(fname)
+		ifExit(err)
 
-	_, err = ebi.WriteAbi(abiData)
-	ifExit(err)
+		abiData, abiHash, err := ebi.ReadAbiFile(fpath)
+		ifExit(err)
 
-	fmt.Printf("Imported Abi as %s\n", abiHash)
+		_, err = ebi.WriteAbi(abiData)
+		ifExit(err)
+
+		fmt.Printf("Imported Abi as %s\n", abiHash)
+	} else if (c.String("input")=="json") {
+		json := []byte(args[0])
+		abiHash, err := ebi.WriteAbi(json)
+		ifExit(err)
+
+		fmt.Printf("Imported Abi as %s\n", abiHash)
+	}
 	return
 }
 
 func cliAdd(c *cli.Context) {
 	//Add an entry to index
 	args := c.Args()
-	iname := args[0]
-	key := args[1]
-	value := args[2]
+	iname := c.String("index")
+	key := args[0]
+	value := args[1]
 
 	err := ebi.AddEntry(iname, key, value)
 	ifExit(err)
