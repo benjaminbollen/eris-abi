@@ -26,6 +26,21 @@ type Method struct {
 	Return Type       // not yet implemented
 }
 
+
+// Argument holds the name of the argument and the corresponding type.
+// Types are used when packing and testing arguments.
+type Argument struct {
+	Name string
+	Type Type
+}
+
+// The ABI holds information about a contract's context and available
+// invokable methods. It will allow you to type check function calls and
+// packs data accordingly.
+type ABI struct {
+	Methods map[string]Method
+}
+
 // Returns the methods string signature according to the ABI spec.
 //
 // Example
@@ -49,49 +64,10 @@ func (m Method) String() (out string) {
 	return
 }
 
-func Sha3(data []byte) []byte {
-	d := sha3.NewKeccak256()
-	d.Write(data)
-
-	return d.Sum(nil)
-}
-
 func (m Method) Id() []byte {
 	return Sha3([]byte(m.String()))[:4]
 }
 
-// Argument holds the name of the argument and the corresponding type.
-// Types are used when packing and testing arguments.
-type Argument struct {
-	Name string
-	Type Type
-}
-
-func (a *Argument) UnmarshalJSON(data []byte) error {
-	var extarg struct {
-		Name string
-		Type string
-	}
-	err := json.Unmarshal(data, &extarg)
-	if err != nil {
-		return fmt.Errorf("argument json err: %v", err)
-	}
-
-	a.Type, err = NewType(extarg.Type)
-	if err != nil {
-		return err
-	}
-	a.Name = extarg.Name
-
-	return nil
-}
-
-// The ABI holds information about a contract's context and available
-// invokable methods. It will allow you to type check function calls and
-// packs data accordingly.
-type ABI struct {
-	Methods map[string]Method
-}
 
 // tests, tests whether the given input would result in a successful
 // call. Checks argument list count and matches input to `input`.
@@ -141,6 +117,26 @@ func (abi ABI) Pack(name string, args ...interface{}) ([]byte, error) {
 	return packed, nil
 }
 
+//utility Functions
+func (a *Argument) UnmarshalJSON(data []byte) error {
+	var extarg struct {
+		Name string
+		Type string
+	}
+	err := json.Unmarshal(data, &extarg)
+	if err != nil {
+		return fmt.Errorf("argument json err: %v", err)
+	}
+
+	a.Type, err = NewType(extarg.Type)
+	if err != nil {
+		return err
+	}
+	a.Name = extarg.Name
+
+	return nil
+}
+
 func (abi *ABI) UnmarshalJSON(data []byte) error {
 	var methods []Method
 	if err := json.Unmarshal(data, &methods); err != nil {
@@ -165,4 +161,11 @@ func JSON(reader io.Reader) (ABI, error) {
 	}
 
 	return abi, nil
+}
+
+func Sha3(data []byte) []byte {
+	d := sha3.NewKeccak256()
+	d.Write(data)
+
+	return d.Sum(nil)
 }

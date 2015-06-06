@@ -7,46 +7,104 @@ import (
 )
 
 func cliPack(c *cli.Context) {
-	//Check only one abi specification method has been used
-	if (c.IsSet("file") && c.IsSet("json")) {
-		fmt.Println("ERROR: Can not simultaneously use --json and --file")
-		return
-	}
+	input := c.String("input")
 
 	args := c.Args()
 
-	//When using --file flag, Get abi from file
-	if (c.IsSet("file")) {
-		fname := c.String("file")
+	
+	if (input == "file") {
+		//When using file input methos, Get abi from file
+		fname := args[0]
+		data := args[1:]
 
-		fpath, err := ebi.ResolveAbiPath(fname)
-		if err != nil {
-			return
-		}
-
-		abiSpec, err := ebi.ReadFileAbi(fpath)
-		if err != nil {
-			return
-		}
-		tx, err := ebi.PackArgsABI(abiSpec, args...)
+		tx, err := ebi.FilePack(fname, data...)
 		ifExit(err)
+
 		fmt.Printf("%s\n", tx)
 		return
-	}
+	} else if (input == "json") {
+		//When using json input method, read json-abi string from command line
+		json := []byte(args[0])
+		data := args[1:]
 
-	//When using --json flag, directly feed json into abi conversion
-	if (c.IsSet("json")) {
-		json := c.String("json")
-		fmt.Println(json)
-
-		abiSpec, err := ebi.ReadJsonAbi(json)
-		if err != nil {
-			return
-		}
-		tx, _ := ebi.PackArgsABI(abiSpec, args...)
-
+		tx, err := ebi.Packer(json, data...)
 		ifExit(err)
+
 		fmt.Printf("%s\n", tx)
 		return
+	} else if (input == "hash") {
+		//Read from the /raw/hash file
+		hash := args[0]
+		data := args[1:]
+
+		tx, err := ebi.HashPack(hash, data...)
+		ifExit(err)
+
+		fmt.Printf("%s\n", tx)
+		return
+	} else if (input == "index") {
+		//The index input method uses the indexing system
+		index := c.String("index")
+		key := args[0]
+		data := args[1:]
+
+		tx, err := ebi.IndexPack(index, key, data...)
+		ifExit(err)
+
+		fmt.Printf("%s\n", tx)
+		return
+
+	} else {
+		err := fmt.Errorf("Unrecognized input method: %s\n", input)
+		ifExit(err)
 	}
+}
+
+func cliImport(c *cli.Context) {
+	//Import an abi file into abi directory
+	args := c.Args()
+	fname := args[0]
+
+	fpath, err := ebi.PathFromHere(fname)
+	ifExit(err)
+
+	abiData, abiHash, err := ebi.ReadAbiFile(fpath)
+	ifExit(err)
+
+	_, err = ebi.WriteAbi(abiData)
+	ifExit(err)
+
+	fmt.Printf("Imported Abi as %s\n", abiHash)
+	return
+}
+
+func cliAdd(c *cli.Context) {
+	//Add an entry to index
+	args := c.Args()
+	iname := args[0]
+	key := args[1]
+	value := args[2]
+
+	err := ebi.AddEntry(iname, key, value)
+	ifExit(err)
+
+	fmt.Printf("Added Entry %s as %s\n", value, key)
+	return
+}
+
+func cliNew(c *cli.Context) {
+	//Create new index
+	args := c.Args()
+	iname := args[0]
+
+	err := ebi.NewIndex(iname)
+	ifExit(err)
+
+	fmt.Printf("Created new index: %s\n", iname)
+	return
+}
+
+func cliServer(c *cli.Context) {
+	host, port := c.String("host"), c.String("port")
+	ifExit(ListenAndServe(host, port))
 }

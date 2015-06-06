@@ -3,16 +3,13 @@ package main
 import (
 	"fmt"
 	"os"
-	"path"
-
 	"github.com/codegangsta/cli"
-	"github.com/eris-ltd/epm-go/utils" //Using non-standard directory for abi storage
+	"github.com/eris-ltd/eris-abi"
 )
 
 var (
-	DefaultDir  = path.Join(utils.Decerver, "contracts")
-	DefaultFile = ""
-	DefaultJson = ""
+	DefaultInput = "index"
+	DefaultIndex = os.Getenv("ERIS_HEAD") 
 
 	DefaultHost = "localhost"
 	DefaultPort = "4592"
@@ -28,34 +25,94 @@ func main() {
 	app.Email = "contact@erisindustries.com"
 	app.Commands = []cli.Command{
 		packCmd,
+		importCmd,
+		addCmd,
+		newCmd,
+		serverCmd,
+	}
+
+	app.Before = func(c *cli.Context) error{
+		//Check directory structure exists. If not create it.
+		err := ebi.CheckDirTree()
+		if err != nil {
+			//Tree does not exist or is incomplete
+			fmt.Println("Abi directory tree incomplete... Creating it...")
+			err := ebi.BuildDirTree()
+			if err != nil {
+				fmt.Println("Could not build: %s", err)
+				return fmt.Errorf("Could not create directory tree")
+			}
+			fmt.Println("Directory tree built!")
+		}
+
+		return nil
 	}
 
 	app.Run(os.Args)
 
 }
 
-//Excessive structuring to not prohibit future expansion of this tool
 var (
 	packCmd = cli.Command{
 		Name:   "pack",
 		Usage:  "generate a transaction",
 		Action: cliPack,
 		Flags: []cli.Flag{
-			fileFlag,
-			jsonFlag,
+			inputFlag,
+			indexFlag,
 		},
 	}
 
-	fileFlag = cli.StringFlag{
-		Name:  "file, f",
-		Value: DefaultFile,
-		Usage: "Specify the ABI file (Containing JSON ABI) to use",
+	importCmd = cli.Command{
+		Name:	"import",
+		Usage:	"Import an existing ABI file into abi directory",
+		Action:	cliImport,
 	}
 
-	jsonFlag = cli.StringFlag{
-		Name:	"json, j",
-		Value:	DefaultJson,
-		Usage: "Pass JSON-formatted ABI",
+	addCmd = cli.Command{
+		Name: 	"add",
+		Usage:	"Add an entry to index",
+		Action:	cliAdd,
+	}
+
+	newCmd = cli.Command{
+		Name: 	"new",
+		Usage:	"Create new index",
+		Action:	cliNew,
+	}
+
+	serverCmd = cli.Command{
+		Name:	"server",
+		Usage:	"Starts a packing server",
+		Action:	cliServer,
+		Flags:	[]cli.Flag{
+			hostFlag,
+			portFlag,
+		},
+	}
+
+	inputFlag = cli.StringFlag{
+		Name: "input",
+		Value: DefaultInput,
+		Usage: "Specify input method of ABI data.",
+	}
+
+	indexFlag = cli.StringFlag{
+		Name: 	"index, i",
+		Usage:	"Specify Chainid to use as look-up",
+		Value:	DefaultIndex,
+	}
+
+	portFlag = cli.StringFlag{
+		Name:  "port",
+		Value: DefaultPort,
+		Usage: "set the port for key daemon to listen on",
+	}
+
+	hostFlag = cli.StringFlag{
+		Name:  "host",
+		Value: DefaultHost,
+		Usage: "set the host for key daemon to listen on",
 	}
 )
 
