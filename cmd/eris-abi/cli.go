@@ -59,6 +59,64 @@ func cliPack(c *cli.Context) {
 	}
 }
 
+func cliUnPack(c *cli.Context) {
+	input := c.String("input")
+	pp := c.Bool("pp")
+	args := c.Args()
+
+	if (input == "file") {
+		//When using file input methods, Get abi from file
+		fname := args[0]
+		name := args[1]
+		data := args[2]
+
+		abs, err := ebi.FileUnPack(fname, name, data, pp)
+		ifExit(err)
+
+		fmt.Printf("%s\n", abs)
+		return
+	} else if (input == "json") {
+		//When using json input method, read json-abi string from command line
+		json := []byte(args[0])
+		name := args[1]
+		data := args[2]
+
+
+		abs, err := ebi.UnPacker(json, name, data, pp)
+		ifExit(err)
+
+		fmt.Printf("%s\n", abs)
+		return
+	} else if (input == "hash") {
+		//Read from the /raw/hash file
+		hash := args[0]
+		name := args[1]
+		data := args[2]
+
+		abs, err := ebi.HashUnPack(hash, name, data, pp)
+		ifExit(err)
+
+		fmt.Printf("%s\n", abs)
+		return
+	} else if (input == "index") {
+		//The index input method uses the indexing system
+		index := c.String("index")
+		key := args[0]
+		name := args[1]
+		data := args[2]
+
+		abs, err := ebi.IndexUnPack(index, key, name, data, pp)
+		ifExit(err)
+
+		fmt.Printf("%s\n", abs)
+		return
+
+	} else {
+		err := fmt.Errorf("Unrecognized input method: %s\n", input)
+		ifExit(err)
+	}
+}
+
 func cliImport(c *cli.Context) {
 	//Import an abi file into abi directory
 	args := c.Args()

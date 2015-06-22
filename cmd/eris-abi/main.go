@@ -25,6 +25,7 @@ func main() {
 	app.Email = "contact@erisindustries.com"
 	app.Commands = []cli.Command{
 		packCmd,
+		unpackCmd,
 		importCmd,
 		addCmd,
 		newCmd,
@@ -60,6 +61,17 @@ var (
 		Flags: []cli.Flag{
 			inputFlag,
 			indexFlag,
+		},
+	}
+
+	unpackCmd = cli.Command{
+		Name:   "unpack",
+		Usage:  "process contract return values",
+		Action: cliUnPack,
+		Flags: []cli.Flag{
+			inputFlag,
+			indexFlag,
+			ppFlag,
 		},
 	}
 
@@ -107,6 +119,11 @@ var (
 		Name:  "index, i",
 		Usage: "Specify index to use as look-up",
 		Value: DefaultIndex,
+	}
+
+	ppFlag = cli.BoolTFlag{
+		Name:	"pp, p",
+		Usage:	"Turn off pretty print and use json output instead",
 	}
 
 	portFlag = cli.StringFlag{

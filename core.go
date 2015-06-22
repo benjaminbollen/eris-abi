@@ -67,6 +67,7 @@ func PackArgsABI(abiSpec abi.ABI, data ...string) (string, error) {
 	return packed, nil
 }
 
+<<<<<<< 5324f193466ace1cc4299ae5b51644d88f0c753d
 func Packer(abiData []byte, data ...string) (string, error) {
 	abiSpec, err := MakeAbi(abiData)
 	if err != nil {
@@ -81,25 +82,40 @@ func Packer(abiData []byte, data ...string) (string, error) {
 	return tx, nil
 }
 
-func coerceHex(aa string, padright bool) string {
-	if !common.IsHex(aa) {
-		//first try and convert to int
-		n, err := strconv.Atoi(aa)
-		if err != nil {
-			// right pad strings
-			if padright {
-				aa = "0x" + fmt.Sprintf("%x", aa) + fmt.Sprintf("%0"+strconv.Itoa(64-len(aa)*2)+"s", "")
-			} else {
-				aa = "0x" + fmt.Sprintf("%x", aa)
-			}
-		} else {
-			aa = "0x" + fmt.Sprintf("%x", n)
-		}
+//Convenience Packing Functions
+func Packer(abiData []byte, data... string) (string, error) {
+	abiSpec, err := MakeAbi(abiData)
+	if err != nil {
+		return "", err
 	}
-	return aa
+
+	tx, err := PackArgsABI(abiSpec, data...)
+	if err != nil {
+		return "", err
+	}
+
+	return tx, nil
 }
 
-//Convenience Packing Functions
+func UnPacker(abiData []byte, name string, datas string, pp bool) (string, error) {
+	data, _ := hex.DecodeString(datas)
+
+	abiSpec, err := MakeAbi(abiData)
+	if err != nil {
+		return "", err
+	}
+
+	unpacked, err := abiSpec.UnPack(name, data)
+
+	if (err != nil) {
+		return "", err
+	}
+
+	if (pp) {
+		return abi.UnpackPrettyPrint(unpacked)
+	}
+	return string(unpacked), nil
+}
 
 // filePack: Read abi data from specified file
 func FilePack(filename string, args ...string) (string, error) {
@@ -121,6 +137,24 @@ func FilePack(filename string, args ...string) (string, error) {
 	return tx, nil
 }
 
+func FileUnPack(filename string, name string, data string, pp bool) (string, error){
+	filepath, err := PathFromHere(filename)
+	if err != nil {
+		return "", err
+	}
+
+	abiData, _, err := ReadAbiFile(filepath)
+	if err != nil {
+		return "", err
+	}
+
+	ups, err := UnPacker(abiData, name, data, pp)
+	if err != nil {
+		return "", err
+	}
+
+	return ups, nil
+}
 // jsonPack not needed: use Packer
 
 // hashPack: Read abi Data from ebi-tree with supplied hashPack
@@ -136,6 +170,21 @@ func HashPack(hash string, args ...string) (string, error) {
 	}
 
 	return tx, nil
+}
+
+func HashUnPack(hash string, name string, data string, pp bool) (string, error){
+	abiData, _, err := ReadAbi(hash)
+	if err != nil {
+		return "", err
+	}
+
+	ups, err := UnPacker(abiData, name, data, pp)
+	if err != nil {
+		return "", err
+	}
+
+	return ups, nil
+
 }
 
 // indexPack: use the index system to fetch abi data
@@ -156,4 +205,23 @@ func IndexPack(index string, key string, args ...string) (string, error) {
 	}
 
 	return tx, nil
+}
+
+func IndexUnPack(index string, key string, name string, data string, pp bool) (string, error) {
+	hash, err := IndexResolve(index, key)
+	if err != nil {
+		return "", err
+	}
+
+	abiData, _, err := ReadAbi(hash)
+	if err != nil {
+		return "", err
+	}
+
+	ups, err := UnPacker(abiData, name, data, pp)
+	if err != nil {
+		return "", err
+	}
+
+	return ups, nil
 }
