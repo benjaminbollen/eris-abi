@@ -3,6 +3,7 @@ package abi
 import (
 	"io"
 	"fmt"
+	"regexp"
 	"strconv"
 	"strings"
 	"math/big"
@@ -185,17 +186,26 @@ func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
 
 //Conversion to string based ont "Type"
 func ProcessType(typ string, value []byte) (string) {
-	switch typ{
-	case "bytes32":
-		return hex.EncodeToString(value)
-	case "string":
-		return string(value)
-	case "int":
-		return hex.EncodeToString(value)
-	case "uint":
-		return new(big.Int).SetBytes(value).String()
-	}
-	return hex.EncodeToString(value)
+	by,_ := regexp.Match("byte",[]byte(typ))
+	st,_ := regexp.Match("string",[]byte(typ))
+	ui,_ := regexp.Match("uint",[]byte(typ))
+	in,_ := regexp.Match("int",[]byte(typ))
+	ad,_ := regexp.Match("address",[]byte(typ))
+	bo,_ := regexp.Match("bool",[]byte(typ))
+
+	if by {return hex.EncodeToString(value)
+	}else if st {return string(common.UnLeftPadBytes(value))
+	}else if ui {return new(big.Int).SetBytes(value).String() //Test uint first because int will also match uint
+	}else if in {return hex.EncodeToString(value) //Should replace this with pretty format
+	}else if ad {return hex.EncodeToString(common.UnLeftPadBytes(value))
+	}else if bo {
+		v := new(big.Int).SetBytes(value).String()
+		if(v == string(0)) {
+			return "False"
+		} else {
+			return "True"
+		}
+	} else {return hex.EncodeToString(value)}
 }
 
 func UnpackPrettyPrint(injson []byte) (string, error) {
