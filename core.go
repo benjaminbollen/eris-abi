@@ -8,8 +8,9 @@ import (
 	"path"
 	"strconv"
 
-	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-abi/abi"
+
+	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
 func PathFromHere(fname string) (string, error) {
@@ -67,7 +68,6 @@ func PackArgsABI(abiSpec abi.ABI, data ...string) (string, error) {
 	return packed, nil
 }
 
-<<<<<<< 5324f193466ace1cc4299ae5b51644d88f0c753d
 func Packer(abiData []byte, data ...string) (string, error) {
 	abiSpec, err := MakeAbi(abiData)
 	if err != nil {

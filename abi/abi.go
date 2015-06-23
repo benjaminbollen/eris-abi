@@ -139,7 +139,7 @@ func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
 	//Note this assumes all return values are 32 bytes (If this is not correct, process type should return number of bytes consumed?)
 
 	start := 0
-	next := 32
+	var next int
 	end := len(data)
 	for i := range method.Outputs {
 /*		fmt.Println("-------------------------")
@@ -151,18 +151,25 @@ func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
 		fmt.Println("Type:"+method.Outputs[i].Type.String())
 		fmt.Println("Value:"+ProcessType(method.Outputs[i].Type.String(), data[start:next]))
 */
-		if (next > end) {
-			return nil, fmt.Errorf("Too much data")
+
+		nbytes, ok := lengths[method.Outputs[i].Type.String()]
+		if(!ok) {
+			return nil, fmt.Errorf("Unrecognized return type")
 		}
+		next = start + nbytes
+
+		if (next > end) {
+			return nil, fmt.Errorf("Too little data")
+		}
+
 		ret[i].Name = method.Outputs[i].Name
 		ret[i].Type = method.Outputs[i].Type.String()
 		ret[i].Value = ProcessType(method.Outputs[i].Type.String(), data[start:next])
 		start = next
-		next = next + 32
 	}
 
 	if (start != end) {
-		return nil, fmt.Errorf("Too little data")
+		return nil, fmt.Errorf("Too much data")
 	}
 
 	retbytes, err := json.Marshal(ret)

@@ -191,9 +191,9 @@ func (t Type) pack(v interface{}) ([]byte, error) {
 		return packed, nil
 	case reflect.Bool:
 		if value.Bool() {
-			return common.LeftPadBytes(big.NewInt(1).Bytes(), 32), nil
+			return common.LeftPadBytes(common.Big1.Bytes(), 32), nil
 		} else {
-			return common.LeftPadBytes(big.NewInt(0).Bytes(), 32), nil
+			return common.LeftPadBytes(common.Big0.Bytes(), 32), nil
 		}
 	}
 
