@@ -6,7 +6,7 @@ import (
 	"io"
 	"strings"
 
-	"github.com/eris-ltd/epm-go/Godeps/_workspace/src/github.com/eris-ltd/go-ethereum/crypto/sha3"
+	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/ethereum/go-ethereum/crypto/sha3"
 )
 
 var NullABI = ABI{}
@@ -25,7 +25,6 @@ type Method struct {
 	Input  []Argument `json:"inputs"`
 	Return Type       // not yet implemented
 }
-
 
 // Argument holds the name of the argument and the corresponding type.
 // Types are used when packing and testing arguments.
@@ -67,7 +66,6 @@ func (m Method) String() (out string) {
 func (m Method) Id() []byte {
 	return Sha3([]byte(m.String()))[:4]
 }
-
 
 // tests, tests whether the given input would result in a successful
 // call. Checks argument list count and matches input to `input`.

@@ -2,14 +2,14 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"github.com/codegangsta/cli"
 	"github.com/eris-ltd/eris-abi"
+	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/codegangsta/cli"
+	"os"
 )
 
 var (
 	DefaultInput = "index"
-	DefaultIndex = os.Getenv("ERIS_HEAD") 
+	DefaultIndex = os.Getenv("ERIS_HEAD")
 
 	DefaultHost = "localhost"
 	DefaultPort = "4592"
@@ -31,7 +31,7 @@ func main() {
 		serverCmd,
 	}
 
-	app.Before = func(c *cli.Context) error{
+	app.Before = func(c *cli.Context) error {
 		//Check directory structure exists. If not create it.
 		err := ebi.CheckDirTree()
 		if err != nil {
@@ -64,49 +64,49 @@ var (
 	}
 
 	importCmd = cli.Command{
-		Name:	"import",
-		Usage:	"Import an existing ABI file into abi directory",
-		Action:	cliImport,
+		Name:   "import",
+		Usage:  "Import an existing ABI file into abi directory",
+		Action: cliImport,
 		Flags: []cli.Flag{
 			inputFlag,
 		},
 	}
 
 	addCmd = cli.Command{
-		Name: 	"add",
-		Usage:	"Add an entry to index",
-		Action:	cliAdd,
+		Name:   "add",
+		Usage:  "Add an entry to index",
+		Action: cliAdd,
 		Flags: []cli.Flag{
 			indexFlag,
 		},
 	}
 
 	newCmd = cli.Command{
-		Name: 	"new",
-		Usage:	"Create new index",
-		Action:	cliNew,
+		Name:   "new",
+		Usage:  "Create new index",
+		Action: cliNew,
 	}
 
 	serverCmd = cli.Command{
-		Name:	"server",
-		Usage:	"Starts a packing server",
-		Action:	cliServer,
-		Flags:	[]cli.Flag{
+		Name:   "server",
+		Usage:  "Starts a packing server",
+		Action: cliServer,
+		Flags: []cli.Flag{
 			hostFlag,
 			portFlag,
 		},
 	}
 
 	inputFlag = cli.StringFlag{
-		Name: "input",
+		Name:  "input",
 		Value: DefaultInput,
 		Usage: "Specify input method of ABI data.",
 	}
 
 	indexFlag = cli.StringFlag{
-		Name: 	"index, i",
-		Usage:	"Specify index to use as look-up",
-		Value:	DefaultIndex,
+		Name:  "index, i",
+		Usage: "Specify index to use as look-up",
+		Value: DefaultIndex,
 	}
 
 	portFlag = cli.StringFlag{

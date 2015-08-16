@@ -1,19 +1,20 @@
 package ebi
 
 import (
-	"os"
-	"log"
+	"encoding/hex"
 	"fmt"
+	"log"
+	"os"
 	"path"
 	"strconv"
-	"encoding/hex"
+
+	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-abi/abi"
-	"github.com/eris-ltd/epm-go/utils"
 )
 
-func PathFromHere(fname string) (string, error){
+func PathFromHere(fname string) (string, error) {
 	//Check for absolute path
-	if (!path.IsAbs(fname)){
+	if !path.IsAbs(fname) {
 		wd, err := os.Getwd()
 		if err != nil {
 			return "", err
@@ -31,7 +32,7 @@ func ResolveAbiPath(chainid, contract string) (string, error) {
 }
 
 func MakeAbi(abiData []byte) (abi.ABI, error) {
-	if len(abiData)==0 {
+	if len(abiData) == 0 {
 		return abi.NullABI, nil
 	}
 
@@ -52,7 +53,7 @@ func PackArgsABI(abiSpec abi.ABI, data ...string) (string, error) {
 	a := []interface{}{}
 	for _, aa := range args {
 		aa = coerceHex(aa, true)
-		bb, _ := hex.DecodeString(utils.StripHex(aa))
+		bb, _ := hex.DecodeString(common.StripHex(aa))
 		a = append(a, bb)
 	}
 
@@ -66,7 +67,7 @@ func PackArgsABI(abiSpec abi.ABI, data ...string) (string, error) {
 	return packed, nil
 }
 
-func Packer(abiData []byte, data... string) (string, error) {
+func Packer(abiData []byte, data ...string) (string, error) {
 	abiSpec, err := MakeAbi(abiData)
 	if err != nil {
 		return "", err
@@ -81,7 +82,7 @@ func Packer(abiData []byte, data... string) (string, error) {
 }
 
 func coerceHex(aa string, padright bool) string {
-	if !utils.IsHex(aa) {
+	if !common.IsHex(aa) {
 		//first try and convert to int
 		n, err := strconv.Atoi(aa)
 		if err != nil {
@@ -98,11 +99,10 @@ func coerceHex(aa string, padright bool) string {
 	return aa
 }
 
-
 //Convenience Packing Functions
 
 // filePack: Read abi data from specified file
-func FilePack(filename string, args... string) (string, error){
+func FilePack(filename string, args ...string) (string, error) {
 	filepath, err := PathFromHere(filename)
 	if err != nil {
 		return "", err
@@ -124,7 +124,7 @@ func FilePack(filename string, args... string) (string, error){
 // jsonPack not needed: use Packer
 
 // hashPack: Read abi Data from ebi-tree with supplied hashPack
-func HashPack(hash string, args... string) (string, error){
+func HashPack(hash string, args ...string) (string, error) {
 	abiData, _, err := ReadAbi(hash)
 	if err != nil {
 		return "", err
@@ -139,7 +139,7 @@ func HashPack(hash string, args... string) (string, error){
 }
 
 // indexPack: use the index system to fetch abi data
-func IndexPack(index string, key string, args... string) (string, error) {
+func IndexPack(index string, key string, args ...string) (string, error) {
 	hash, err := IndexResolve(index, key)
 	if err != nil {
 		return "", err

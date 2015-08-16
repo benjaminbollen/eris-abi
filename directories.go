@@ -1,18 +1,19 @@
 package ebi
 
 import (
-	"os"
 	"fmt"
+	"os"
 	"path"
-	"github.com/eris-ltd/eris-cli/util"
+
+	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
 func GetAbiRoot() string {
 	var abiroot string
-	if (os.Getenv("ERIS_ABI_ROOT") != "") {
+	if os.Getenv("ERIS_ABI_ROOT") != "" {
 		abiroot = os.Getenv("ERIS_ABI_ROOT")
 	} else {
-		abiroot = path.Join(util.UserErisDir(), "abi")
+		abiroot = path.Join(common.ErisRoot, "abi")
 	}
 	return abiroot
 }
@@ -27,9 +28,9 @@ func GetAbiRoot() string {
 //           + abi files (hash named)
 
 var (
-	Root = GetAbiRoot()
+	Root  = GetAbiRoot()
 	Index = path.Join(Root, "index")
-	Raw = path.Join(Root, "raw")
+	Raw   = path.Join(Root, "raw")
 )
 
 func InitPaths() {

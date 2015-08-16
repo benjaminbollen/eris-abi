@@ -7,7 +7,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/eris-ltd/epm-go/Godeps/_workspace/src/github.com/eris-ltd/go-ethereum/crypto"
+	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/ethereum/go-ethereum/crypto"
 )
 
 const jsondata = `
@@ -72,12 +72,12 @@ func TestReader(t *testing.T) {
 	Uint256, _ := NewType("uint256")
 	exp := ABI{
 		Methods: map[string]Method{
-			"balance": Method{
+			"balance": {
 				"balance", true, nil, Type{},
 			},
-			"send": Method{
+			"send": {
 				"send", false, []Argument{
-					Argument{"amount", Uint256},
+					{"amount", Uint256},
 				}, Type{},
 			},
 		},
@@ -219,7 +219,7 @@ func TestTestAddress(t *testing.T) {
 func TestMethodSignature(t *testing.T) {
 	String, _ := NewType("string")
 	String32, _ := NewType("string32")
-	m := Method{"foo", false, []Argument{Argument{"bar", String32}, Argument{"baz", String}}, Type{}}
+	m := Method{"foo", false, []Argument{{"bar", String32}, {"baz", String}}, Type{}}
 	exp := "foo(string32,string)"
 	if m.String() != exp {
 		t.Error("signature mismatch", exp, "!=", m.String())
@@ -231,7 +231,7 @@ func TestMethodSignature(t *testing.T) {
 	}
 
 	uintt, _ := NewType("uint")
-	m = Method{"foo", false, []Argument{Argument{"bar", uintt}}, Type{}}
+	m = Method{"foo", false, []Argument{{"bar", uintt}}, Type{}}
 	exp = "foo(uint256)"
 	if m.String() != exp {
 		t.Error("signature mismatch", exp, "!=", m.String())

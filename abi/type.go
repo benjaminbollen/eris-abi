@@ -2,11 +2,12 @@ package abi
 
 import (
 	"fmt"
+	"math/big"
 	"reflect"
 	"regexp"
 	"strconv"
 
-	"github.com/eris-ltd/epm-go/Godeps/_workspace/src/github.com/eris-ltd/go-ethereum/ethutil"
+	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
 const (
@@ -159,19 +160,19 @@ func (t Type) pack(v interface{}) ([]byte, error) {
 		if t.Size > -1 && value.Len() > t.Size {
 			return nil, fmt.Errorf("%v out of bound. %d for %d", value.Kind(), value.Len(), t.Size)
 		}
-		return []byte(ethutil.LeftPadString(t.String(), 32)), nil
+		return []byte(common.LeftPadString(t.String(), 32)), nil
 	case reflect.Slice:
 		if t.Size > -1 && value.Len() > t.Size {
 			return nil, fmt.Errorf("%v out of bound. %d for %d", value.Kind(), value.Len(), t.Size)
 		}
 
 		if bb, ok := v.([]byte); ok {
-			return ethutil.LeftPadBytes(bb, 32), nil
+			return common.LeftPadBytes(bb, 32), nil
 		}
 
 		// Address is a special slice. The slice acts as one rather than a list of elements.
 		if t.T == AddressTy {
-			return ethutil.LeftPadBytes(v.([]byte), 32), nil
+			return common.LeftPadBytes(v.([]byte), 32), nil
 		}
 
 		// Signed / Unsigned check
@@ -186,9 +187,9 @@ func (t Type) pack(v interface{}) ([]byte, error) {
 		return packed, nil
 	case reflect.Bool:
 		if value.Bool() {
-			return ethutil.LeftPadBytes(ethutil.Big1.Bytes(), 32), nil
+			return common.LeftPadBytes(big.NewInt(1).Bytes(), 32), nil
 		} else {
-			return ethutil.LeftPadBytes(ethutil.Big0.Bytes(), 32), nil
+			return common.LeftPadBytes(big.NewInt(0).Bytes(), 32), nil
 		}
 	}
 

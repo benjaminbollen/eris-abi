@@ -2,8 +2,8 @@ package main
 
 import (
 	"fmt"
-	"github.com/codegangsta/cli"
 	"github.com/eris-ltd/eris-abi"
+	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/codegangsta/cli"
 )
 
 func cliPack(c *cli.Context) {
@@ -11,8 +11,7 @@ func cliPack(c *cli.Context) {
 
 	args := c.Args()
 
-	
-	if (input == "file") {
+	if input == "file" {
 		//When using file input methos, Get abi from file
 		fname := args[0]
 		data := args[1:]
@@ -22,7 +21,7 @@ func cliPack(c *cli.Context) {
 
 		fmt.Printf("%s\n", tx)
 		return
-	} else if (input == "json") {
+	} else if input == "json" {
 		//When using json input method, read json-abi string from command line
 		json := []byte(args[0])
 		data := args[1:]
@@ -32,7 +31,7 @@ func cliPack(c *cli.Context) {
 
 		fmt.Printf("%s\n", tx)
 		return
-	} else if (input == "hash") {
+	} else if input == "hash" {
 		//Read from the /raw/hash file
 		hash := args[0]
 		data := args[1:]
@@ -42,7 +41,7 @@ func cliPack(c *cli.Context) {
 
 		fmt.Printf("%s\n", tx)
 		return
-	} else if (input == "index") {
+	} else if input == "index" {
 		//The index input method uses the indexing system
 		index := c.String("index")
 		key := args[0]
@@ -64,7 +63,7 @@ func cliImport(c *cli.Context) {
 	//Import an abi file into abi directory
 	args := c.Args()
 
-	if (c.String("input")=="file"){
+	if c.String("input") == "file" {
 		fname := args[0]
 
 		fpath, err := ebi.PathFromHere(fname)
@@ -77,7 +76,7 @@ func cliImport(c *cli.Context) {
 		ifExit(err)
 
 		fmt.Printf("Imported Abi as %s\n", abiHash)
-	} else if (c.String("input")=="json") {
+	} else if c.String("input") == "json" {
 		json := []byte(args[0])
 		abiHash, err := ebi.WriteAbi(json)
 		ifExit(err)
