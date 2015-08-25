@@ -20,17 +20,17 @@ var NullABI = ABI{}
 // be flagged `true`.
 // Input specifies the required input parameters for this gives method.
 type Method struct {
-	Name   string `json:"name"`
-	Const  bool
+	Name   string     `json:"name"`
+	Const  bool       `json:"constant"`
 	Input  []Argument `json:"inputs"`
-	Return Type       // not yet implemented
+	Return Type       `json:"return"`
 }
 
 // Argument holds the name of the argument and the corresponding type.
 // Types are used when packing and testing arguments.
 type Argument struct {
-	Name string
-	Type Type
+	Name string `json:"name"`
+	Type Type   `json:"type"`
 }
 
 // The ABI holds information about a contract's context and available

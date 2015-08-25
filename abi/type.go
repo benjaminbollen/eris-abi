@@ -28,6 +28,10 @@ type Type struct {
 	stringKind string // holds the unparsed string for deriving signatures
 }
 
+func (t Type) MarshalJSON() ([]byte, error) {
+	return []byte(fmt.Sprintf(`"%s"`, t.stringKind)), nil
+}
+
 // New type returns a fully parsed Type given by the input string or an error if it  can't be parsed.
 //
 // Strings can be in the format of:
