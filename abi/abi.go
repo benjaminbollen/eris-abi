@@ -141,7 +141,7 @@ func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
 
 	start := 0
 	var next int
-	end := len(data)
+	// end := len(data)
 	for i := range method.Outputs {
 		/*		fmt.Println("-------------------------")
 				fmt.Println(i)
