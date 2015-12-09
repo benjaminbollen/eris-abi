@@ -83,7 +83,7 @@ func Packer(abiData []byte, data ...string) (string, error) {
 }
 
 //Convenience Packing Functions
-func Packer(abiData []byte, data... string) (string, error) {
+func Packer(abiData []byte, data ...string) (string, error) {
 	abiSpec, err := MakeAbi(abiData)
 	if err != nil {
 		return "", err
@@ -107,11 +107,11 @@ func UnPacker(abiData []byte, name string, datas string, pp bool) (string, error
 
 	unpacked, err := abiSpec.UnPack(name, data)
 
-	if (err != nil) {
+	if err != nil {
 		return "", err
 	}
 
-	if (pp) {
+	if pp {
 		return abi.UnpackPrettyPrint(unpacked)
 	}
 	return string(unpacked), nil
@@ -137,7 +137,7 @@ func FilePack(filename string, args ...string) (string, error) {
 	return tx, nil
 }
 
-func FileUnPack(filename string, name string, data string, pp bool) (string, error){
+func FileUnPack(filename string, name string, data string, pp bool) (string, error) {
 	filepath, err := PathFromHere(filename)
 	if err != nil {
 		return "", err
@@ -155,6 +155,7 @@ func FileUnPack(filename string, name string, data string, pp bool) (string, err
 
 	return ups, nil
 }
+
 // jsonPack not needed: use Packer
 
 // hashPack: Read abi Data from ebi-tree with supplied hashPack
@@ -172,7 +173,7 @@ func HashPack(hash string, args ...string) (string, error) {
 	return tx, nil
 }
 
-func HashUnPack(hash string, name string, data string, pp bool) (string, error){
+func HashUnPack(hash string, name string, data string, pp bool) (string, error) {
 	abiData, _, err := ReadAbi(hash)
 	if err != nil {
 		return "", err

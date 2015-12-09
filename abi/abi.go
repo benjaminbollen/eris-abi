@@ -1,20 +1,20 @@
 package abi
 
 import (
-	"io"
+	"encoding/hex"
+	"encoding/json"
 	"fmt"
+	"io"
+	"math/big"
 	"regexp"
 	"strconv"
 	"strings"
-	"math/big"
-	"encoding/hex"
-	"encoding/json"
 
 	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/ethereum/go-ethereum/crypto/sha3"
+	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 )
 
 var NullABI = ABI{}
-
 
 // Callable method given a `Name` and whether the method is a constant.
 // If the method is `Const` no transaction needs to be created for this
@@ -25,16 +25,16 @@ var NullABI = ABI{}
 // be flagged `true`.
 // Inputs specifies the required input parameters for this gives method.
 type Method struct {
-	Name   string// `json:"name"`
-	Constant  bool
-	Inputs  []Argument// `json:"inputs"`
-	Outputs []Argument// `json:"outputs"`
-	Type string
+	Name     string // `json:"name"`
+	Constant bool
+	Inputs   []Argument // `json:"inputs"`
+	Outputs  []Argument // `json:"outputs"`
+	Type     string
 }
 
 type Argpairs struct {
-	Name string
-	Type string
+	Name  string
+	Type  string
 	Value string
 }
 
@@ -143,25 +143,25 @@ func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
 	var next int
 	end := len(data)
 	for i := range method.Outputs {
-/*		fmt.Println("-------------------------")
-		fmt.Println(i)
-		fmt.Println(start)
-		fmt.Println(next)
-		fmt.Println(end)
-		fmt.Println("Name:"+string(method.Outputs[i].Name))
-		fmt.Println("Type:"+method.Outputs[i].Type.String())
-		fmt.Println("Value:"+ProcessType(method.Outputs[i].Type.String(), data[start:next]))
-*/
+		/*		fmt.Println("-------------------------")
+				fmt.Println(i)
+				fmt.Println(start)
+				fmt.Println(next)
+				fmt.Println(end)
+				fmt.Println("Name:"+string(method.Outputs[i].Name))
+				fmt.Println("Type:"+method.Outputs[i].Type.String())
+				fmt.Println("Value:"+ProcessType(method.Outputs[i].Type.String(), data[start:next]))
+		*/
 
 		nbytes, ok := lengths[method.Outputs[i].Type.String()]
-		if(!ok) {
+		if !ok {
 			return nil, fmt.Errorf("Unrecognized return type")
 		}
 		next = start + nbytes
 
-		if (next > end) {
-			return nil, fmt.Errorf("Too little data")
-		}
+		// if (next > end) {
+		// 	return nil, fmt.Errorf("Too little data")
+		// }
 
 		ret[i].Name = method.Outputs[i].Name
 		ret[i].Type = method.Outputs[i].Type.String()
@@ -169,12 +169,12 @@ func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
 		start = next
 	}
 
-	if (start != end) {
-		return nil, fmt.Errorf("Too much data")
-	}
+	// if (start != end) {
+	// 	return nil, fmt.Errorf("Too much data")
+	// }
 
 	retbytes, err := json.Marshal(ret)
-	if (err != nil) {
+	if err != nil {
 		return nil, err
 	}
 
@@ -185,34 +185,41 @@ func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
 //utility Functions
 
 //Conversion to string based ont "Type"
-func ProcessType(typ string, value []byte) (string) {
-	by,_ := regexp.Match("byte",[]byte(typ))
-	st,_ := regexp.Match("string",[]byte(typ))
-	ui,_ := regexp.Match("uint",[]byte(typ))
-	in,_ := regexp.Match("int",[]byte(typ))
-	ad,_ := regexp.Match("address",[]byte(typ))
-	bo,_ := regexp.Match("bool",[]byte(typ))
+func ProcessType(typ string, value []byte) string {
+	by, _ := regexp.Match("byte", []byte(typ))
+	st, _ := regexp.Match("string", []byte(typ))
+	ui, _ := regexp.Match("uint", []byte(typ))
+	in, _ := regexp.Match("int", []byte(typ))
+	ad, _ := regexp.Match("address", []byte(typ))
+	bo, _ := regexp.Match("bool", []byte(typ))
 
-	if by {return hex.EncodeToString(value)
-	}else if st {return string(common.UnLeftPadBytes(value))
-	}else if ui {return new(big.Int).SetBytes(value).String() //Test uint first because int will also match uint
-	}else if in {return hex.EncodeToString(value) //Should replace this with pretty format
-	}else if ad {return hex.EncodeToString(common.UnLeftPadBytes(value))
-	}else if bo {
+	if by {
+		return hex.EncodeToString(value)
+	} else if st {
+		return string(common.UnLeftPadBytes(value))
+	} else if ui {
+		return new(big.Int).SetBytes(value).String() //Test uint first because int will also match uint
+	} else if in {
+		return hex.EncodeToString(value) //Should replace this with pretty format
+	} else if ad {
+		return hex.EncodeToString(common.UnLeftPadBytes(value))
+	} else if bo {
 		v := new(big.Int).SetBytes(value).String()
-		if(v == string(0)) {
+		if v == string(0) {
 			return "False"
 		} else {
 			return "True"
 		}
-	} else {return hex.EncodeToString(value)}
+	} else {
+		return hex.EncodeToString(value)
+	}
 }
 
 func UnpackPrettyPrint(injson []byte) (string, error) {
 	var ret []Argpairs
 
 	err := json.Unmarshal(injson, &ret)
-	if (err != nil) {
+	if err != nil {
 		return "", err
 	}
 
@@ -220,7 +227,7 @@ func UnpackPrettyPrint(injson []byte) (string, error) {
 	pps := ""
 	unc := int(1)
 	for _, A := range ret {
-		if (A.Name == "") {
+		if A.Name == "" {
 			tname := "UVar" + strconv.Itoa(unc)
 			pps = pps + tname + " : " + A.Value
 			unc = unc + 1
@@ -251,7 +258,6 @@ func (a *Argument) UnmarshalJSON(data []byte) error {
 
 	return nil
 }
-
 
 //Fills an ABI object with umarshalled data.
 func (abi *ABI) UnmarshalJSON(data []byte) error {
