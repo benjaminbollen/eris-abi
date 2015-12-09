@@ -141,7 +141,7 @@ func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
 
 	start := 0
 	var next int
-	// end := len(data)
+	end := len(data)
 	for i := range method.Outputs {
 		/*		fmt.Println("-------------------------")
 				fmt.Println(i)
@@ -159,9 +159,9 @@ func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
 		}
 		next = start + nbytes
 
-		// if (next > end) {
-		// 	return nil, fmt.Errorf("Too little data")
-		// }
+		if next > end {
+			return nil, fmt.Errorf("Too little data")
+		}
 
 		ret[i].Name = method.Outputs[i].Name
 		ret[i].Type = method.Outputs[i].Type.String()
@@ -169,9 +169,9 @@ func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
 		start = next
 	}
 
-	// if (start != end) {
-	// 	return nil, fmt.Errorf("Too much data")
-	// }
+	if start != end {
+		return nil, fmt.Errorf("Too much data")
+	}
 
 	retbytes, err := json.Marshal(ret)
 	if err != nil {

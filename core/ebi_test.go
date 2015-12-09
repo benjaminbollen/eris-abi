@@ -1,15 +1,15 @@
 package ebi
 
 import (
-	"os"
 	"fmt"
+	"io/ioutil"
+	"os"
 	"path"
 	"testing"
-	"io/ioutil"
 )
 
 var (
-	EVcopy	= os.Getenv("ERIS_ABI_ROOT")
+	EVcopy  = os.Getenv("ERIS_ABI_ROOT")
 	DIR     = path.Join(os.Getenv("HOME"), ".testing_eris-abi")
 	testabi = "[{\"constant\":false,\"inputs\":[],\"name\":\"get\",\"outputs\":[{\"name\":\"\",\"type\":\"bytes32\"}],\"type\":\"function\"},{\"constant\":false,\"inputs\":[{\"name\":\"input\",\"type\":\"bytes32\"}],\"name\":\"set\",\"outputs\":[],\"type\":\"function\"},{\"inputs\":[],\"type\":\"constructor\"}]"
 	testtx1 = []string{
@@ -22,10 +22,10 @@ var (
 		"set",
 		"hello",
 	}
-	file    = path.Join(DIR, "example.abi")
-	hash    = "3c49d66fe61179b31260ff006e401d489b0a73db175980ee269147b12a0041f8"
-	index   = "test"
-	key     = "bob" 
+	file  = path.Join(DIR, "example.abi")
+	hash  = "3c49d66fe61179b31260ff006e401d489b0a73db175980ee269147b12a0041f8"
+	index = "test"
+	key   = "bob"
 )
 
 func setup() error {
@@ -65,7 +65,7 @@ func setup() error {
 }
 
 func cleanup() {
-	if (EVcopy == "") {
+	if EVcopy == "" {
 		//Wasn't set in the first place, unset
 		err := os.Unsetenv("ERIS_ABI_ROOT")
 		if err != nil {
@@ -107,7 +107,7 @@ func TestPacker(t *testing.T) {
 
 	if txout != tx1 {
 		t.Fatalf("Output transaction did not match expected")
-	} 
+	}
 }
 
 func TestFilePack(t *testing.T) {
@@ -118,7 +118,7 @@ func TestFilePack(t *testing.T) {
 
 	if txout != tx1 {
 		t.Fatalf("Output transaction did not match expected")
-	} 
+	}
 }
 
 func TestHashPack(t *testing.T) {
@@ -144,5 +144,8 @@ func TestIndexPack(t *testing.T) {
 }
 
 func TestNewIndex(t *testing.T) {
-	err := NewIndex()
+	err := NewIndex("asdf")
+	if err != nil {
+		t.Fatal(err)
+	}
 }

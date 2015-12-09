@@ -1,6 +1,6 @@
 {
 	"ImportPath": "github.com/eris-ltd/eris-abi",
-	"GoVersion": "go1.4.2",
+	"GoVersion": "go1.5",
 	"Packages": [
 		"./..."
 	],
@@ -17,11 +17,11 @@
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/common",
-			"Rev": "aa66cb878cf35cc51d2c80a6ea3943870dc550d9"
+			"Rev": "ef355537f104b5c38603d200fa436a6b6824c860"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/log",
-			"Rev": "aa66cb878cf35cc51d2c80a6ea3943870dc550d9"
+			"Rev": "ef355537f104b5c38603d200fa436a6b6824c860"
 		},
 		{
 			"ImportPath": "github.com/ethereum/go-ethereum/common",
@@ -53,6 +53,48 @@
 		{
 			"ImportPath": "golang.org/x/crypto/scrypt",
 			"Rev": "4ed45ec682102c643324fae5dff8dab085b6c300"
+		},
+		{
+			"ImportPath": "github.com/cpuguy83/go-md2man/md2man",
+			"Comment": "v1.0.4",
+			"Rev": "71acacd42f85e5e82f70a55327789582a5200a90"
+		},
+		{
+			"ImportPath": "github.com/eris-ltd/common/go/common",
+			"Rev": "ef355537f104b5c38603d200fa436a6b6824c860"
+		},
+		{
+			"ImportPath": "github.com/eris-ltd/common/go/log",
+			"Rev": "ef355537f104b5c38603d200fa436a6b6824c860"
+		},
+		{
+			"ImportPath": "github.com/inconshreveable/mousetrap",
+			"Rev": "76626ae9c91c4f2a10f34cad8ce83ea42c93bb75"
+		},
+		{
+			"ImportPath": "github.com/mitchellh/go-homedir",
+			"Rev": "df55a15e5ce646808815381b3db47a8c66ea62f4"
+		},
+		{
+			"ImportPath": "github.com/russross/blackfriday",
+			"Comment": "v1.2-80-g8cec3a8",
+			"Rev": "8cec3a854e68dba10faabbe31c089abf4a3e57a6"
+		},
+		{
+			"ImportPath": "github.com/shurcooL/sanitized_anchor_name",
+			"Rev": "244f5ac324cb97e1987ef901a0081a77bfd8e845"
+		},
+		{
+			"ImportPath": "github.com/spf13/cobra",
+			"Rev": "8b2293c74173adb0e12df6862c1ea36afac2401f"
+		},
+		{
+			"ImportPath": "github.com/spf13/pflag",
+			"Rev": "08b1a584251b5b62f458943640fc8ebd4d50aaa5"
+		},
+		{
+			"ImportPath": "gopkg.in/check.v1",
+			"Rev": "64131543e7896d5bcc6bd5a76287eb75ea96c673"
 		}
 	]
 }

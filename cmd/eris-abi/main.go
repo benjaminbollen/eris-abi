@@ -2,9 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/eris-ltd/eris-abi"
-	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/codegangsta/cli"
 	"os"
+
+	ebi "github.com/eris-ltd/eris-abi/core"
+
+	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/codegangsta/cli"
 )
 
 var (
@@ -37,13 +39,13 @@ func main() {
 		err := ebi.CheckDirTree()
 		if err != nil {
 			//Tree does not exist or is incomplete
-			fmt.Println("Abi directory tree incomplete... Creating it...")
+			logger.Println("Abi directory tree incomplete... Creating it...")
 			err := ebi.BuildDirTree()
 			if err != nil {
-				fmt.Println("Could not build: %s", err)
+				logger.Println("Could not build: %s", err)
 				return fmt.Errorf("Could not create directory tree")
 			}
-			fmt.Println("Directory tree built!")
+			logger.Println("Directory tree built!")
 		}
 
 		return nil
@@ -122,8 +124,8 @@ var (
 	}
 
 	ppFlag = cli.BoolTFlag{
-		Name:	"pp, p",
-		Usage:	"Turn off pretty print and use json output instead",
+		Name:  "pp, p",
+		Usage: "Turn off pretty print and use json output instead",
 	}
 
 	portFlag = cli.StringFlag{
@@ -140,13 +142,13 @@ var (
 )
 
 func exit(err error) {
-	fmt.Println(err)
+	logger.Println(err)
 	os.Exit(1)
 }
 
 func ifExit(err error) {
 	if err != nil {
-		fmt.Println(err)
+		logger.Println(err)
 		os.Exit(1)
 	}
 

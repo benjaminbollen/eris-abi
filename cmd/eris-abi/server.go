@@ -1,10 +1,11 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
-	"encoding/json"
-	"github.com/eris-ltd/eris-abi"
+
+	ebi "github.com/eris-ltd/eris-abi/core"
 )
 
 //------------------------------------------------------------------------
@@ -14,7 +15,7 @@ import (
 
 func ListenAndServe(host, port string) error {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/pack",packHandler)
+	mux.HandleFunc("/pack", packHandler)
 	return http.ListenAndServe(host+":"+port, mux)
 }
 
@@ -56,7 +57,7 @@ func packHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//input method switch
-	if (input == "json") {
+	if input == "json" {
 		jsonabi := []byte(r.Header.Get("json"))
 
 		tx, err := ebi.Packer(jsonabi, args...)
@@ -65,9 +66,9 @@ func packHandler(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 
-		WriteResult(w, fmt.Sprintf("%s",tx))
+		WriteResult(w, fmt.Sprintf("%s", tx))
 
-	} else if (input == "hash") {
+	} else if input == "hash" {
 		hash := r.Header.Get("hash")
 
 		tx, err := ebi.HashPack(hash, args...)
@@ -77,9 +78,9 @@ func packHandler(w http.ResponseWriter, r *http.Request) {
 		}
 
 		WriteResult(w, fmt.Sprintf("%s", tx))
-		return		
+		return
 
-	} else if (input == "index") {
+	} else if input == "index" {
 		index := r.Header.Get("index")
 		if index == "" {
 			index = DefaultIndex
@@ -101,6 +102,5 @@ func packHandler(w http.ResponseWriter, r *http.Request) {
 
 	} else {
 		WriteError(w, fmt.Errorf("Unrecoginized abi specification method"))
-	} 
+	}
 }
-
