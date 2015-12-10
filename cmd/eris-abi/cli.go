@@ -134,11 +134,7 @@ func cliImport(c *cli.Context) {
 		_, err = ebi.WriteAbi(abiData)
 		ifExit(err)
 
-<<<<<<< 59ea82c6982e0028840d52b6b3a7a055c7ca6aee
-		fmt.Printf("Imported Abi as %s\n", abiHash)
-=======
 		logger.Printf("Imported Abi as %s\n", abiHash)
->>>>>>> ...
 	} else if c.String("input") == "json" {
 		json := []byte(args[0])
 		abiHash, err := ebi.WriteAbi(json)

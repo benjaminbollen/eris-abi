@@ -2,7 +2,6 @@ package abi
 
 import (
 	"fmt"
-	"math/big"
 	"reflect"
 	"regexp"
 	"strconv"

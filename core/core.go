@@ -68,20 +68,6 @@ func PackArgsABI(abiSpec abi.ABI, data ...string) (string, error) {
 	return packed, nil
 }
 
-func Packer(abiData []byte, data ...string) (string, error) {
-	abiSpec, err := MakeAbi(abiData)
-	if err != nil {
-		return "", err
-	}
-
-	tx, err := PackArgsABI(abiSpec, data...)
-	if err != nil {
-		return "", err
-	}
-
-	return tx, nil
-}
-
 //Convenience Packing Functions
 func Packer(abiData []byte, data ...string) (string, error) {
 	abiSpec, err := MakeAbi(abiData)
@@ -225,4 +211,22 @@ func IndexUnPack(index string, key string, name string, data string, pp bool) (s
 	}
 
 	return ups, nil
+}
+
+func coerceHex(aa string, padright bool) string {
+	if !common.IsHex(aa) {
+		//first try and convert to int
+		n, err := strconv.Atoi(aa)
+		if err != nil {
+			// right pad strings
+			if padright {
+				aa = "0x" + fmt.Sprintf("%x", aa) + fmt.Sprintf("%0"+strconv.Itoa(64-len(aa)*2)+"s", "")
+			} else {
+				aa = "0x" + fmt.Sprintf("%x", aa)
+			}
+		} else {
+			aa = "0x" + fmt.Sprintf("%x", n)
+		}
+	}
+	return aa
 }
