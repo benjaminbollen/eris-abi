@@ -19,7 +19,7 @@ package common
 import (
 	"math/big"
 
-	checker "gopkg.in/check.v1"
+	checker "github.com/eris-ltd/eris-abi/Godeps/_workspace/src/gopkg.in/check.v1"
 )
 
 type ValueSuite struct{}

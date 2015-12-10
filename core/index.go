@@ -1,11 +1,11 @@
 package ebi
 
 import (
-	"os"
-	"fmt"
-	"path"
-	"io/ioutil"
 	"encoding/json"
+	"fmt"
+	"io/ioutil"
+	"os"
+	"path"
 )
 
 type Entry struct {
@@ -13,7 +13,7 @@ type Entry struct {
 }
 
 type Imap struct {
-	Name string
+	Name    string
 	Entries map[string]Entry
 }
 
@@ -48,7 +48,7 @@ func ReadIndexFile(indexPath string) (Imap, error) {
 		return NullImap, fmt.Errorf("Unable to read index file: %s", indexPath)
 	}
 
-	var imap Imap//imap map[string]Entry
+	var imap Imap //imap map[string]Entry
 	if err := json.Unmarshal(indexData, &imap); err != nil {
 		return NullImap, fmt.Errorf("Failed to read index")
 	}
@@ -68,11 +68,11 @@ func ReadIndex(indexFile string) (Imap, error) {
 }
 
 func (imap *Imap) SetKey(key string, value string) error {
-	if (value == "") {
+	if value == "" {
 		delete(imap.Entries, key)
 	} else {
 		var entry Entry
-		entry.Hash = value 
+		entry.Hash = value
 		imap.Entries[key] = entry
 	}
 

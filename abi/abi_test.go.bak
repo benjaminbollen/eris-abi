@@ -1,3 +1,5 @@
+// NOTE!!!! This needs to get reconfigured to get that old crypto out of there.....
+
 package abi
 
 import (

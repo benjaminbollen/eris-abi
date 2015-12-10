@@ -1,18 +1,18 @@
 package ebi
 
 import (
-	"os"
-	"fmt"
-	"log"
-	"path"
-	"io/ioutil"
-	"encoding/hex"
 	"crypto/sha256"
+	"encoding/hex"
+	"fmt"
+	"io/ioutil"
+	"log"
+	"os"
+	"path"
 )
 
 //This file is for storage and retrieval functions of abi's in abi subdirectory
 
-//Write ABI []byte data into hash-named file 
+//Write ABI []byte data into hash-named file
 func WriteAbi(abiData []byte) (string, error) {
 	//Construct file path based on data hash
 	hash := sha256.Sum256(abiData)
@@ -54,7 +54,7 @@ func ReadAbi(abiHash string) ([]byte, string, error) {
 		return nil, "", err
 	}
 
-	if (dataHash != abiHash) {
+	if dataHash != abiHash {
 		return nil, "", fmt.Errorf("The retrieved Abi file's hash did not match requested")
 	}
 
@@ -81,7 +81,7 @@ func VerifyAbiHash(abiPath, abiHash string) error {
 		return err
 	}
 
-	if (dataHash != abiHash) {
+	if dataHash != abiHash {
 		return fmt.Errorf("The abi data does not match its hash")
 	}
 
