@@ -10,8 +10,8 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/ethereum/go-ethereum/crypto/sha3"
 	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/ethereum/go-ethereum/crypto/sha3"
 )
 
 var NullABI = ABI{}
@@ -136,28 +136,21 @@ func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
 
 	ret := make([]Argpairs, len(method.Outputs))
 
-	//Parse []data
 	//Note this assumes all return values are 32 bytes (If this is not correct, process type should return number of bytes consumed?)
-
 	start := 0
 	var next int
 	end := len(data)
-	for i := range method.Outputs {
-		/*		fmt.Println("-------------------------")
-				fmt.Println(i)
-				fmt.Println(start)
-				fmt.Println(next)
-				fmt.Println(end)
-				fmt.Println("Name:"+string(method.Outputs[i].Name))
-				fmt.Println("Type:"+method.Outputs[i].Type.String())
-				fmt.Println("Value:"+ProcessType(method.Outputs[i].Type.String(), data[start:next]))
-		*/
 
-		nbytes, ok := lengths[method.Outputs[i].Type.String()]
+	for i := range method.Outputs {
+
+		_, ok := lengths[method.Outputs[i].Type.String()]
 		if !ok {
 			return nil, fmt.Errorf("Unrecognized return type")
 		}
-		next = start + nbytes
+
+		next = start + lengths["retBlock"]
+		// next = start + bytesToParse
+		// start = next - bytesToParse
 
 		if next > end {
 			return nil, fmt.Errorf("Too little data")
@@ -165,7 +158,11 @@ func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
 
 		ret[i].Name = method.Outputs[i].Name
 		ret[i].Type = method.Outputs[i].Type.String()
-		ret[i].Value = ProcessType(method.Outputs[i].Type.String(), data[start:next])
+		ret[i].Value = ProcessType(ret[i].Type, data[start:next])
+		logger.Debugf("ABI Unpack. Name =>\t\t%s\n", ret[i].Name)
+		logger.Debugf("ABI Unpack. Type =>\t\t%s\n", ret[i].Type)
+		logger.Debugf("ABI Unpack. Value =>\t\t%s\n", ret[i].Value)
+
 		start = next
 	}
 
@@ -184,33 +181,27 @@ func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
 
 //utility Functions
 
-//Conversion to string based ont "Type"
+//Conversion to string based on "Type"
 func ProcessType(typ string, value []byte) string {
-	by, _ := regexp.Match("byte", []byte(typ))
-	st, _ := regexp.Match("string", []byte(typ))
-	ui, _ := regexp.Match("uint", []byte(typ))
-	in, _ := regexp.Match("int", []byte(typ))
-	ad, _ := regexp.Match("address", []byte(typ))
-	bo, _ := regexp.Match("bool", []byte(typ))
-
-	if by {
+	switch typ {
+	case "byte":
 		return hex.EncodeToString(value)
-	} else if st {
+	case "string":
 		return string(common.UnLeftPadBytes(value))
-	} else if ui {
+	case "uint":
 		return new(big.Int).SetBytes(value).String() //Test uint first because int will also match uint
-	} else if in {
+	case "int":
 		return hex.EncodeToString(value) //Should replace this with pretty format
-	} else if ad {
-		return hex.EncodeToString(common.UnLeftPadBytes(value))
-	} else if bo {
+	case "address":
+		return common.Coerce2Hex(strings.ToUpper(hex.EncodeToString(common.Address(value))))
+	case "bool":
 		v := new(big.Int).SetBytes(value).String()
 		if v == string(0) {
 			return "False"
 		} else {
 			return "True"
 		}
-	} else {
+	default:
 		return hex.EncodeToString(value)
 	}
 }
