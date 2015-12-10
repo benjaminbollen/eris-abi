@@ -68,7 +68,9 @@ func S2S256(n int64) []byte {
 
 // packNum packs the given number (using the reflect value) and will cast it to appropriate number representation
 func packNum(value reflect.Value, to byte) []byte {
-	switch kind := value.Kind(); kind {
+	kind := value.Kind()
+	logger.Debugf("KIND packNum: %s:%v\n", kind, value)
+	switch kind {
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		if to == UintTy {
 			return U2U256(value.Uint())
