@@ -177,3 +177,27 @@ func UnLeftPadBytes(slice []byte) []byte {
 
 	return unpadded
 }
+
+func Address(slice []byte) (addr []byte) {
+	if len(slice) < 20 {
+		addr = LeftPadBytes(slice, 20)
+	} else if len(slice) > 20 {
+		addr = slice[len(slice)-20:]
+	} else {
+		addr = slice
+	}
+
+	addr = CopyBytes(addr)
+
+	return
+}
+
+// Copy bytes
+//
+// Returns an exact copy of the provided bytes
+func CopyBytes(b []byte) (copiedBytes []byte) {
+	copiedBytes = make([]byte, len(b))
+	copy(copiedBytes, b)
+
+	return
+}

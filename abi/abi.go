@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io"
 	"math/big"
-	"regexp"
 	"strconv"
 	"strings"
 
