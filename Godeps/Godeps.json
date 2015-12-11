@@ -17,11 +17,11 @@
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/common",
-			"Rev": "22610e3ed43561ef9e8b0b58d62c6fb0a1f6dea6"
+			"Rev": "aa552ea7e0c35a4a31bdd4755e4c8ba6f2602fae"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/log",
-			"Rev": "22610e3ed43561ef9e8b0b58d62c6fb0a1f6dea6"
+			"Rev": "aa552ea7e0c35a4a31bdd4755e4c8ba6f2602fae"
 		},
 		{
 			"ImportPath": "github.com/ethereum/go-ethereum/common",
@@ -61,11 +61,11 @@
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/common",
-			"Rev": "22610e3ed43561ef9e8b0b58d62c6fb0a1f6dea6"
+			"Rev": "aa552ea7e0c35a4a31bdd4755e4c8ba6f2602fae"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/log",
-			"Rev": "22610e3ed43561ef9e8b0b58d62c6fb0a1f6dea6"
+			"Rev": "aa552ea7e0c35a4a31bdd4755e4c8ba6f2602fae"
 		},
 		{
 			"ImportPath": "github.com/inconshreveable/mousetrap",

@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"math/big"
+	"regexp"
 	"strconv"
 	"strings"
 
@@ -78,32 +79,12 @@ func (m Method) Id() []byte {
 	return Sha3([]byte(m.String()))[:4]
 }
 
-// tests, tests whether the given input would result in a successful
-// call. Checks argument list count and matches input to `input`.
-func (abi ABI) pack(name string, args ...interface{}) ([]byte, error) {
-	method := abi.Methods[name]
-
-	var ret []byte
-	for i, a := range args {
-		input := method.Inputs[i]
-		packed, err := input.Type.pack(a)
-		//fmt.Println(i, a, packed)
-		if err != nil {
-			return nil, fmt.Errorf("`%s` %v", name, err)
-		}
-		ret = append(ret, packed...)
-
-	}
-
-	return ret, nil
-}
-
 // Pack the given method name to conform the ABI. Method call's data
 // will consist of method_id, args0, arg1, ... argN. Method id consists
 // of 4 bytes and arguments are all 32 bytes.
 // Method ids are created from the first 4 bytes of the hash of the
 // methods string signature. (signature = baz(uint32,string32))
-func (abi ABI) Pack(name string, args ...interface{}) ([]byte, error) {
+func (abi ABI) Pack(name string, argsRaw []string, args ...interface{}) ([]byte, error) {
 	method, exist := abi.Methods[name]
 	if !exist {
 		return nil, fmt.Errorf("method '%s' not found", name)
@@ -114,7 +95,7 @@ func (abi ABI) Pack(name string, args ...interface{}) ([]byte, error) {
 		return nil, fmt.Errorf("argument count mismatch: %d for %d", len(args), len(method.Inputs))
 	}
 
-	arguments, err := abi.pack(name, args...)
+	arguments, err := abi.pack(name, argsRaw, args...)
 	if err != nil {
 		return nil, err
 	}
@@ -182,24 +163,16 @@ func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
 
 //Conversion to string based on "Type"
 func ProcessType(typ string, value []byte) string {
-	switch typ {
-	case "byte":
-		return hex.EncodeToString(value)
-	case "string":
-		return string(common.UnLeftPadBytes(value))
-	case "uint":
-		return new(big.Int).SetBytes(value).String() //Test uint first because int will also match uint
-	case "int":
-		return hex.EncodeToString(value) //Should replace this with pretty format
+	t := getMajorType(typ)
+	switch t {
+	case "byte", "string":
+		return string(common.UnRightPadBytes(value))
+	case "uint", "int":
+		return common.StripZeros(common.BigD(value).String())
 	case "address":
-		return common.Coerce2Hex(strings.ToUpper(hex.EncodeToString(common.Address(value))))
+		return strings.ToUpper(hex.EncodeToString(common.Address(value)))
 	case "bool":
-		v := new(big.Int).SetBytes(value).String()
-		if v == string(0) {
-			return "False"
-		} else {
-			return "True"
-		}
+		return new(big.Int).SetBytes(value).String()
 	default:
 		return hex.EncodeToString(value)
 	}
@@ -280,4 +253,55 @@ func Sha3(data []byte) []byte {
 	d.Write(data)
 
 	return d.Sum(nil)
+}
+
+func getMajorType(typ string) string {
+	var t bool
+	t, _ = regexp.MatchString("byte", typ)
+	if t {
+		return "byte"
+	}
+	t, _ = regexp.MatchString("string", typ)
+	if t {
+		return "string"
+	}
+	t, _ = regexp.MatchString("uint", typ) // Test uint first because int will also match uint
+	if t {
+		return "uint"
+	}
+	t, _ = regexp.MatchString("int", typ)
+	if t {
+		return "int"
+	}
+	t, _ = regexp.MatchString("address", typ)
+	if t {
+		return "address"
+	}
+	t, _ = regexp.MatchString("bool", typ)
+	if t {
+		return "bool"
+	}
+	return "unknown"
+}
+
+// tests, tests whether the given input would result in a successful
+// call. Checks argument list count and matches input to `input`.
+func (abi ABI) pack(name string, argsRaw []string, args ...interface{}) ([]byte, error) {
+	method := abi.Methods[name]
+
+	var ret []byte
+	for i, a := range args {
+		input := method.Inputs[i]
+		if method.Inputs[i].Type.String() == "address" {
+			a = common.AddressStringToBytes(argsRaw[i])
+		}
+		logger.Debugf("Packing =>\t\t\t%v:%v\n", input, a)
+		packed, err := input.Type.pack(a)
+		if err != nil {
+			return nil, fmt.Errorf("ERROR packing fn =>\t\t%s:%v", name, err)
+		}
+		ret = append(ret, packed...)
+	}
+
+	return ret, nil
 }
