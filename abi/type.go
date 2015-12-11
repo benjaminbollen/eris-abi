@@ -112,7 +112,7 @@ func NewType(t string) (typ Type, err error) {
 		case "address":
 			typ.Kind = reflect.Slice
 			typ.Type = byte_ts
-			typ.Size = 40
+			typ.Size = 20
 			typ.T = AddressTy
 		case "string", "bytes":
 			typ.Kind = reflect.String
