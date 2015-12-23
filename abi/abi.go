@@ -95,6 +95,7 @@ func (abi ABI) Pack(name string, argsRaw []string, args ...interface{}) ([]byte,
 		return nil, fmt.Errorf("argument count mismatch: %d for %d", len(args), len(method.Inputs))
 	}
 
+	logger.Debugf("Pack:pack =>\t\t%s:%v:%v\n", name, argsRaw, args)
 	arguments, err := abi.pack(name, argsRaw, args...)
 	if err != nil {
 		return nil, err
