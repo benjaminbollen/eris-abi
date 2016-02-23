@@ -39,13 +39,13 @@ func main() {
 		err := ebi.CheckDirTree()
 		if err != nil {
 			//Tree does not exist or is incomplete
-			logger.Println("Abi directory tree incomplete... Creating it...")
+			fmt.Println("Abi directory tree incomplete... Creating it...")
 			err := ebi.BuildDirTree()
 			if err != nil {
-				logger.Println("Could not build: %s", err)
+				fmt.Println("Could not build: %s", err)
 				return fmt.Errorf("Could not create directory tree")
 			}
-			logger.Println("Directory tree built!")
+			fmt.Println("Directory tree built!")
 		}
 
 		return nil
@@ -142,13 +142,13 @@ var (
 )
 
 func exit(err error) {
-	logger.Println(err)
+	fmt.Println(err)
 	os.Exit(1)
 }
 
 func ifExit(err error) {
 	if err != nil {
-		logger.Println(err)
+		fmt.Println(err)
 		os.Exit(1)
 	}
 

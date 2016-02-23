@@ -22,16 +22,16 @@ const (
 )
 
 //--------------------------------------------------------------------------------
-// thread safe logger that fires messages from multiple packages one at a time
+// thread safe fmt that fires messages from multiple packages one at a time
 
 func init() {
 	go readLoop()
 }
 
 var (
-	// control access to loggers
+	// control access to fmts
 	mtx     sync.Mutex
-	loggers = make(map[string]*Logger)
+	fmts = make(map[string]*Logger)
 
 	// access to writers managed by channels
 	writer    io.Writer = os.Stdout
@@ -56,7 +56,7 @@ type Logger struct {
 	ErrWriter *SafeWriter
 }
 
-// add a default logger with pkg name
+// add a default fmt with pkg name
 func AddLogger(pkg string) *Logger {
 	l := &Logger{
 		Level:     LogLevelError,
@@ -65,7 +65,7 @@ func AddLogger(pkg string) *Logger {
 		ErrWriter: NewSafeWriter(errorCh),
 	}
 	mtx.Lock()
-	loggers[pkg] = l
+	fmts[pkg] = l
 	mtx.Unlock()
 	return l
 }
@@ -74,7 +74,7 @@ func SetLogLevelGlobal(level LogLevel) {
 	mtx.Lock()
 	defer mtx.Unlock()
 
-	for _, l := range loggers {
+	for _, l := range fmts {
 		l.Level = level
 	}
 }
@@ -84,7 +84,7 @@ func SetLogLevel(pkg string, level LogLevel) {
 	mtx.Lock()
 	defer mtx.Unlock()
 
-	if l, ok := loggers[pkg]; ok {
+	if l, ok := fmts[pkg]; ok {
 		l.Level = level
 		if level > LogLevelInfo {
 			// TODO: wrap the writers to print [<pkg>]
@@ -92,11 +92,11 @@ func SetLogLevel(pkg string, level LogLevel) {
 	}
 }
 
-// set level and writer for all loggers
+// set level and writer for all fmts
 func SetLoggers(level LogLevel, w io.Writer, ew io.Writer) {
 	mtx.Lock()
 	defer mtx.Unlock()
-	for _, l := range loggers {
+	for _, l := range fmts {
 		l.Level = level
 		if l.Level > LogLevelInfo {
 			// TODO: wrap the writers to print [<pkg>]
@@ -137,7 +137,7 @@ func flush(ch chan []byte, w io.Writer) {
 	}
 }
 
-// Flush the log channels. Concurrent users of the logger should quit before
+// Flush the log channels. Concurrent users of the fmt should quit before
 // Flush() is called to ensure it completes.
 func Flush() {
 	if atomic.CompareAndSwapUint32(&running, 1, 0) {
@@ -182,7 +182,7 @@ func errorln(s ...interface{}) {
 }
 
 //--------------------------------------------------------------------------------
-// public logger functions
+// public fmt functions
 
 // Printf and Println write to the Writer no matter what
 func (l *Logger) Printf(s string, args ...interface{}) {

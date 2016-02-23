@@ -24,8 +24,8 @@ import (
 
 	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/ethereum/go-ethereum/common"
 	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/logger"
-	"github.com/ethereum/go-ethereum/logger/glog"
+	"github.com/ethereum/go-ethereum/fmt"
+	"github.com/ethereum/go-ethereum/fmt/glog"
 )
 
 /*
@@ -137,7 +137,7 @@ func (self *Registrar) SetHashReg(hashreg string, addr common.Address) (txhash s
 		}
 		nameHex, extra := encodeName(HashRegName, 2)
 		hashRegAbi := resolveAbi + nameHex + extra
-		glog.V(logger.Detail).Infof("\ncall HashRegAddr %v with %v\n", GlobalRegistrarAddr, hashRegAbi)
+		glog.V(fmt.Detail).Infof("\ncall HashRegAddr %v with %v\n", GlobalRegistrarAddr, hashRegAbi)
 		var res string
 		res, _, err = self.backend.Call("", GlobalRegistrarAddr, "", "", "", hashRegAbi)
 		if len(res) >= 40 {
@@ -153,9 +153,9 @@ func (self *Registrar) SetHashReg(hashreg string, addr common.Address) (txhash s
 			if err != nil {
 				err = fmt.Errorf("HashReg address not found and sender for creation failed: %v", err)
 			}
-			glog.V(logger.Detail).Infof("created HashRegAddr @ txhash %v\n", txhash)
+			glog.V(fmt.Detail).Infof("created HashRegAddr @ txhash %v\n", txhash)
 		} else {
-			glog.V(logger.Detail).Infof("HashRegAddr found at @ %v\n", HashRegAddr)
+			glog.V(fmt.Detail).Infof("HashRegAddr found at @ %v\n", HashRegAddr)
 			return
 		}
 	}
@@ -172,7 +172,7 @@ func (self *Registrar) SetUrlHint(urlhint string, addr common.Address) (txhash s
 		}
 		nameHex, extra := encodeName(UrlHintName, 2)
 		urlHintAbi := resolveAbi + nameHex + extra
-		glog.V(logger.Detail).Infof("UrlHint address query data: %s to %s", urlHintAbi, GlobalRegistrarAddr)
+		glog.V(fmt.Detail).Infof("UrlHint address query data: %s to %s", urlHintAbi, GlobalRegistrarAddr)
 		var res string
 		res, _, err = self.backend.Call("", GlobalRegistrarAddr, "", "", "", urlHintAbi)
 		if len(res) >= 40 {
@@ -187,9 +187,9 @@ func (self *Registrar) SetUrlHint(urlhint string, addr common.Address) (txhash s
 			if err != nil {
 				err = fmt.Errorf("UrlHint address not found and sender for creation failed: %v", err)
 			}
-			glog.V(logger.Detail).Infof("created UrlHint @ txhash %v\n", txhash)
+			glog.V(fmt.Detail).Infof("created UrlHint @ txhash %v\n", txhash)
 		} else {
-			glog.V(logger.Detail).Infof("UrlHint found @ %v\n", HashRegAddr)
+			glog.V(fmt.Detail).Infof("UrlHint found @ %v\n", HashRegAddr)
 			return
 		}
 	}
@@ -202,7 +202,7 @@ func (self *Registrar) SetUrlHint(urlhint string, addr common.Address) (txhash s
 func (self *Registrar) ReserveName(address common.Address, name string) (txh string, err error) {
 	nameHex, extra := encodeName(name, 2)
 	abi := reserveAbi + nameHex + extra
-	glog.V(logger.Detail).Infof("Reserve data: %s", abi)
+	glog.V(fmt.Detail).Infof("Reserve data: %s", abi)
 	return self.backend.Transact(
 		address.Hex(),
 		GlobalRegistrarAddr,
@@ -219,7 +219,7 @@ func (self *Registrar) SetAddressToName(from common.Address, name string, addres
 	addrHex := encodeAddress(address)
 
 	abi := registerAbi + nameHex + addrHex + trueHex + extra
-	glog.V(logger.Detail).Infof("SetAddressToName data: %s to %s ", abi, GlobalRegistrarAddr)
+	glog.V(fmt.Detail).Infof("SetAddressToName data: %s to %s ", abi, GlobalRegistrarAddr)
 
 	return self.backend.Transact(
 		from.Hex(),
@@ -233,7 +233,7 @@ func (self *Registrar) SetAddressToName(from common.Address, name string, addres
 func (self *Registrar) NameToAddr(from common.Address, name string) (address common.Address, err error) {
 	nameHex, extra := encodeName(name, 2)
 	abi := resolveAbi + nameHex + extra
-	glog.V(logger.Detail).Infof("NameToAddr data: %s", abi)
+	glog.V(fmt.Detail).Infof("NameToAddr data: %s", abi)
 	res, _, err := self.backend.Call(
 		from.Hex(),
 		GlobalRegistrarAddr,
@@ -269,7 +269,7 @@ func (self *Registrar) SetHashToHash(address common.Address, codehash, dochash c
 	dochex := common.Bytes2Hex(dochash[:])
 
 	data := registerContentHashAbi + codehex + dochex
-	glog.V(logger.Detail).Infof("SetHashToHash data: %s sent  to %v\n", data, HashRegAddr)
+	glog.V(fmt.Detail).Infof("SetHashToHash data: %s sent  to %v\n", data, HashRegAddr)
 	return self.backend.Transact(
 		address.Hex(),
 		HashRegAddr,

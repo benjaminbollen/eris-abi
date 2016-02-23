@@ -29,8 +29,8 @@ import (
 
 	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/ethereum/go-ethereum/common"
 	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/ethereum/go-ethereum/crypto"
-	"github.com/ethereum/go-ethereum/logger"
-	"github.com/ethereum/go-ethereum/logger/glog"
+	"github.com/ethereum/go-ethereum/fmt"
+	"github.com/ethereum/go-ethereum/fmt/glog"
 )
 
 const (
@@ -98,7 +98,7 @@ func New(solcPath string) (sol *Solidity, err error) {
 		solcPath: solcPath,
 		version:  version,
 	}
-	glog.V(logger.Info).Infoln(sol.Info())
+	glog.V(fmt.Info).Infoln(sol.Info())
 	return
 }
 

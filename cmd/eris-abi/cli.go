@@ -21,7 +21,7 @@ func cliPack(c *cli.Context) {
 		tx, err := ebi.FilePack(fname, data...)
 		ifExit(err)
 
-		logger.Printf("%s\n", tx)
+		fmt.Printf("%s\n", tx)
 		return
 	} else if input == "json" {
 		//When using json input method, read json-abi string from command line
@@ -31,7 +31,7 @@ func cliPack(c *cli.Context) {
 		tx, err := ebi.Packer(json, data...)
 		ifExit(err)
 
-		logger.Printf("%s\n", tx)
+		fmt.Printf("%s\n", tx)
 		return
 	} else if input == "hash" {
 		//Read from the /raw/hash file
@@ -41,7 +41,7 @@ func cliPack(c *cli.Context) {
 		tx, err := ebi.HashPack(hash, data...)
 		ifExit(err)
 
-		logger.Printf("%s\n", tx)
+		fmt.Printf("%s\n", tx)
 		return
 	} else if input == "index" {
 		//The index input method uses the indexing system
@@ -52,7 +52,7 @@ func cliPack(c *cli.Context) {
 		tx, err := ebi.IndexPack(index, key, data...)
 		ifExit(err)
 
-		logger.Printf("%s\n", tx)
+		fmt.Printf("%s\n", tx)
 		return
 
 	} else {
@@ -75,7 +75,7 @@ func cliUnPack(c *cli.Context) {
 		abs, err := ebi.FileUnPack(fname, name, data, pp)
 		ifExit(err)
 
-		logger.Printf("%s\n", abs)
+		fmt.Printf("%s\n", abs)
 		return
 	} else if input == "json" {
 		//When using json input method, read json-abi string from command line
@@ -86,7 +86,7 @@ func cliUnPack(c *cli.Context) {
 		abs, err := ebi.UnPacker(json, name, data, pp)
 		ifExit(err)
 
-		logger.Printf("%s\n", abs)
+		fmt.Printf("%s\n", abs)
 		return
 	} else if input == "hash" {
 		//Read from the /raw/hash file
@@ -97,7 +97,7 @@ func cliUnPack(c *cli.Context) {
 		abs, err := ebi.HashUnPack(hash, name, data, pp)
 		ifExit(err)
 
-		logger.Printf("%s\n", abs)
+		fmt.Printf("%s\n", abs)
 		return
 	} else if input == "index" {
 		//The index input method uses the indexing system
@@ -109,7 +109,7 @@ func cliUnPack(c *cli.Context) {
 		abs, err := ebi.IndexUnPack(index, key, name, data, pp)
 		ifExit(err)
 
-		logger.Printf("%s\n", abs)
+		fmt.Printf("%s\n", abs)
 		return
 
 	} else {
@@ -134,13 +134,13 @@ func cliImport(c *cli.Context) {
 		_, err = ebi.WriteAbi(abiData)
 		ifExit(err)
 
-		logger.Printf("Imported Abi as %s\n", abiHash)
+		fmt.Printf("Imported Abi as %s\n", abiHash)
 	} else if c.String("input") == "json" {
 		json := []byte(args[0])
 		abiHash, err := ebi.WriteAbi(json)
 		ifExit(err)
 
-		logger.Printf("Imported Abi as %s\n", abiHash)
+		fmt.Printf("Imported Abi as %s\n", abiHash)
 	}
 	return
 }
@@ -155,7 +155,7 @@ func cliAdd(c *cli.Context) {
 	err := ebi.AddEntry(iname, key, value)
 	ifExit(err)
 
-	logger.Printf("Added Entry %s as %s\n", value, key)
+	fmt.Printf("Added Entry %s as %s\n", value, key)
 	return
 }
 
@@ -167,7 +167,7 @@ func cliNew(c *cli.Context) {
 	err := ebi.NewIndex(iname)
 	ifExit(err)
 
-	logger.Printf("Created new index: %s\n", iname)
+	fmt.Printf("Created new index: %s\n", iname)
 	return
 }
 

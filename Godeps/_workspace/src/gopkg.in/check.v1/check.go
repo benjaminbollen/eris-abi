@@ -82,7 +82,7 @@ type C struct {
 	kind      funcKind
 	testName  string
 	status    funcStatus
-	logb      *logger
+	logb      *fmt
 	logw      io.Writer
 	done      chan *C
 	reason    string
@@ -97,25 +97,25 @@ func (c *C) stopNow() {
 	runtime.Goexit()
 }
 
-// logger is a concurrency safe byte.Buffer
-type logger struct {
+// fmt is a concurrency safe byte.Buffer
+type fmt struct {
 	sync.Mutex
 	writer bytes.Buffer
 }
 
-func (l *logger) Write(buf []byte) (int, error) {
+func (l *fmt) Write(buf []byte) (int, error) {
 	l.Lock()
 	defer l.Unlock()
 	return l.writer.Write(buf)
 }
 
-func (l *logger) WriteTo(w io.Writer) (int64, error) {
+func (l *fmt) WriteTo(w io.Writer) (int64, error) {
 	l.Lock()
 	defer l.Unlock()
 	return l.writer.WriteTo(w)
 }
 
-func (l *logger) String() string {
+func (l *fmt) String() string {
 	l.Lock()
 	defer l.Unlock()
 	return l.writer.String()
@@ -630,13 +630,13 @@ func (runner *suiteRunner) run() *Result {
 
 // Create a call object with the given suite method, and fork a
 // goroutine with the provided dispatcher for running it.
-func (runner *suiteRunner) forkCall(method *methodType, kind funcKind, testName string, logb *logger, dispatcher func(c *C)) *C {
+func (runner *suiteRunner) forkCall(method *methodType, kind funcKind, testName string, logb *fmt, dispatcher func(c *C)) *C {
 	var logw io.Writer
 	if runner.output.Stream {
 		logw = runner.output
 	}
 	if logb == nil {
-		logb = new(logger)
+		logb = new(fmt)
 	}
 	c := &C{
 		method:    method,
@@ -660,7 +660,7 @@ func (runner *suiteRunner) forkCall(method *methodType, kind funcKind, testName 
 }
 
 // Same as forkCall(), but wait for call to finish before returning.
-func (runner *suiteRunner) runFunc(method *methodType, kind funcKind, testName string, logb *logger, dispatcher func(c *C)) *C {
+func (runner *suiteRunner) runFunc(method *methodType, kind funcKind, testName string, logb *fmt, dispatcher func(c *C)) *C {
 	c := runner.forkCall(method, kind, testName, logb, dispatcher)
 	<-c.done
 	return c
@@ -703,7 +703,7 @@ func (runner *suiteRunner) callDone(c *C) {
 // goroutine like all suite methods, but this method will not return
 // while the fixture goroutine is not done, because the fixture must be
 // run in a desired order.
-func (runner *suiteRunner) runFixture(method *methodType, testName string, logb *logger) *C {
+func (runner *suiteRunner) runFixture(method *methodType, testName string, logb *fmt) *C {
 	if method != nil {
 		c := runner.runFunc(method, fixtureKd, testName, logb, func(c *C) {
 			c.ResetTimer()
@@ -719,7 +719,7 @@ func (runner *suiteRunner) runFixture(method *methodType, testName string, logb 
 // Run the fixture method with runFixture(), but panic with a fixturePanic{}
 // in case the fixture method panics.  This makes it easier to track the
 // fixture panic together with other call panics within forkTest().
-func (runner *suiteRunner) runFixtureWithPanic(method *methodType, testName string, logb *logger, skipped *bool) *C {
+func (runner *suiteRunner) runFixtureWithPanic(method *methodType, testName string, logb *fmt, skipped *bool) *C {
 	if skipped != nil && *skipped {
 		return nil
 	}
