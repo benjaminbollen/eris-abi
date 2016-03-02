@@ -10,6 +10,7 @@ import (
 	"strconv"
 	"strings"
 
+	log "github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
 	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/ethereum/go-ethereum/crypto/sha3"
 )
@@ -96,15 +97,19 @@ func (abi ABI) Pack(name string, data []string) ([]byte, error) {
 		return nil, fmt.Errorf("argument count mismatch: %d for %d", len(data), len(method.Inputs))
 	}
 
+	if len(data) == 0 {
+		log.Debug("Nothing to pack")
+	}
+
 	var arguments []byte
 	for i, a := range data {
 		input := method.Inputs[i]
 
-		/*
-			fmt.Printf("ABI Pack. Name =>\t\t%s\n", input.Name)
-			fmt.Printf("ABI Pack. Type =>\t\t%s\n", input.Type.String())
-			fmt.Printf("ABI Pack. Value =>\t\t%s\n", a)
-		*/
+		log.WithFields(log.Fields{
+			"name": input.Name,
+			"type": input.Type.String(),
+			"val":  a,
+		}).Debug("ABI Pack")
 		ret, err := PackProcessType(input.Type.String(), a)
 		if err != nil {
 			return nil, err
@@ -174,15 +179,27 @@ func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
 
 		next = start + lengths["retBlock"]
 		if next > end {
-			return nil, fmt.Errorf("Too little data")
+			log.WithFields(log.Fields{
+				"name":   ret[i].Name,
+				"type":   ret[i].Type,
+				"val":    ret[i].Value,
+				"len":    lengths[method.Outputs[i].Type.String()],
+				"retBlk": lengths["retBlock"],
+				"start":  start,
+				"next":   next,
+				"end":    end,
+			}).Error("Too little data")
+			return nil, fmt.Errorf("Too little data; usually means a bad return from a contract")
 		}
 
 		ret[i].Name = method.Outputs[i].Name
 		ret[i].Type = method.Outputs[i].Type.String()
 		ret[i].Value = UnpackProcessType(ret[i].Type, data[start:next])
-		fmt.Printf("ABI Unpack. Name =>\t\t%s\n", ret[i].Name)
-		fmt.Printf("ABI Unpack. Type =>\t\t%s\n", ret[i].Type)
-		fmt.Printf("ABI Unpack. Value =>\t\t%s\n", ret[i].Value)
+		log.WithFields(log.Fields{
+			"name": ret[i].Name,
+			"type": ret[i].Type,
+			"val":  ret[i].Value,
+		}).Debug("ABI Unpack")
 
 		start = next
 	}

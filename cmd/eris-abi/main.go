@@ -6,7 +6,9 @@ import (
 
 	ebi "github.com/eris-ltd/eris-abi/core"
 
+	log "github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/codegangsta/cli"
+	logger "github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
 )
 
 var (
@@ -35,17 +37,26 @@ func main() {
 	}
 
 	app.Before = func(c *cli.Context) error {
+		log.SetFormatter(logger.ErisFormatter{})
+
+		// log.SetLevel(log.WarnLevel)
+		// if do.Verbose {
+		// 	log.SetLevel(log.InfoLevel)
+		// } else if do.Debug {
+		//  log.SetLevel(log.DebugLevel)
+		// }
+
 		//Check directory structure exists. If not create it.
 		err := ebi.CheckDirTree()
 		if err != nil {
 			//Tree does not exist or is incomplete
-			fmt.Println("Abi directory tree incomplete... Creating it...")
+			log.Println("Abi directory tree incomplete... Creating it...")
 			err := ebi.BuildDirTree()
 			if err != nil {
-				fmt.Println("Could not build: %s", err)
+				log.Println("Could not build: %s", err)
 				return fmt.Errorf("Could not create directory tree")
 			}
-			fmt.Println("Directory tree built!")
+			log.Println("Directory tree built!")
 		}
 
 		return nil
@@ -142,14 +153,13 @@ var (
 )
 
 func exit(err error) {
-	fmt.Println(err)
+	log.Println(err)
 	os.Exit(1)
 }
 
 func ifExit(err error) {
 	if err != nil {
-		fmt.Println(err)
+		log.Println(err)
 		os.Exit(1)
 	}
-
 }
