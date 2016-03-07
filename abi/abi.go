@@ -242,7 +242,7 @@ func UnpackProcessType(typ string, value []byte, start int) (string, int) {
 	switch t {
 	case "byte":
 		return string(common.UnRightPadBytes(value)), (start + lengths["retBlock"])
-	case "string", "bytes":
+	case "string":
 		return unpackByteArray(value, start)
 	case "uint":
 		val := common.StripZeros(common.BigD(value).String())
@@ -392,6 +392,9 @@ func Sha3(data []byte) []byte {
 
 func getMajorType(typ string) string {
 	var t bool
+	if typ == "bytes" {
+		return "string"
+	}
 	t, _ = regexp.MatchString("byte", typ)
 	if t {
 		return "byte"
