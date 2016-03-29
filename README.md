@@ -157,4 +157,31 @@ OPTIONS:
 
 ```
 
-The server has not yet been tested. Gets arguments similar to the cli pack command through the header. Use of "file" input method is not permitted  
+The server has not yet been tested. Gets arguments similar to the cli pack command through the header. Use of "file" input method is not permitted 
+
+# Contributions
+
+Are Welcome! Before submitting a pull request please:
+
+* read up on [How The Marmots Git](https://github.com/eris-ltd/coding/wiki/How-The-Marmots-Git)
+* fork from `develop`
+* go fmt your changes
+* have tests
+* pull request
+* be awesome
+
+That's pretty much it. 
+
+See our [CONTRIBUTING.md](.github/CONTRIBUTING.md) and [PULL_REQUEST_TEMPLATE.md](.github/PULL_REQUEST_TEMPLATE.md) for more details.
+
+Please note that this repository is GPLv3.0 per the LICENSE file. Any code which is contributed via pull request shall be deemed to have consented to GPLv3.0 via submission of the code (were such code accepted into the repository).
+
+# Bug Reporting
+
+Found a bug in our stack? Make an issue!
+
+The [issue template](.github/ISSUE_TEMPLATE.md] specifies what needs to be included in your issue and will autopopulate the issue.
+
+# License
+
+[Proudly GPL-3](http://www.gnu.org/philosophy/enforcing-gpl.en.html). See [license file](https://github.com/eris-ltd/eris-cli/blob/master/LICENSE.md).
