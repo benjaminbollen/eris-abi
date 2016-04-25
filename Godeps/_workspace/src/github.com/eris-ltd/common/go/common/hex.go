@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"encoding/hex"
 	"fmt"
+	log "github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/Sirupsen/logrus"
 	"strconv"
 	"strings"
 )
@@ -217,6 +218,7 @@ func Address(slice []byte) (addr []byte) {
 
 func AddressStringToBytes(addr string) []byte {
 	var slice []byte
+	log.Info("LENGTH OF ADDRESS STRING TO BYTES", len(addr))
 	for i := 0; i < len(addr); i++ {
 		a, _ := hex.DecodeString(addr[i : i+2])
 		slice = append(slice, a[0])

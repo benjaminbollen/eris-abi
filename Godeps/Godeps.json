@@ -1,6 +1,7 @@
 {
 	"ImportPath": "github.com/eris-ltd/eris-abi",
 	"GoVersion": "go1.5",
+	"GodepVersion": "v62",
 	"Packages": [
 		"./..."
 	],
@@ -22,11 +23,11 @@
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/common",
-			"Rev": "ad2fd09d8610bb86904b641fe1a852c5b0b92de9"
+			"Rev": "d9f354179abb8294026d2c3999d762b5022e5255"
 		},
 		{
 			"ImportPath": "github.com/eris-ltd/common/go/log",
-			"Rev": "ad2fd09d8610bb86904b641fe1a852c5b0b92de9"
+			"Rev": "d9f354179abb8294026d2c3999d762b5022e5255"
 		},
 		{
 			"ImportPath": "github.com/ethereum/go-ethereum/crypto/sha3",
