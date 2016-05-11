@@ -6,13 +6,12 @@ import (
 	ebi "github.com/eris-ltd/eris-abi/core"
 
 	log "github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/codegangsta/cli"
+	. "github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/spf13/cobra"
 )
 
-func cliPack(c *cli.Context) {
-	input := c.String("input")
-
-	args := c.Args()
+func cliPack(cmd *cobra.Command, args []string) {
+	input := InputFlag
 
 	if input == "file" {
 		//When using file input methos, Get abi from file
@@ -20,7 +19,7 @@ func cliPack(c *cli.Context) {
 		data := args[1:]
 
 		tx, err := ebi.FilePack(fname, data...)
-		ifExit(err)
+		IfExit(err)
 
 		log.Printf("%s\n", tx)
 		return
@@ -30,7 +29,7 @@ func cliPack(c *cli.Context) {
 		data := args[1:]
 
 		tx, err := ebi.Packer(json, data...)
-		ifExit(err)
+		IfExit(err)
 
 		log.Printf("%s\n", tx)
 		return
@@ -40,32 +39,31 @@ func cliPack(c *cli.Context) {
 		data := args[1:]
 
 		tx, err := ebi.HashPack(hash, data...)
-		ifExit(err)
+		IfExit(err)
 
 		log.Printf("%s\n", tx)
 		return
 	} else if input == "index" {
 		//The index input method uses the indexing system
-		index := c.String("index")
+		index := IndexFlag
 		key := args[0]
 		data := args[1:]
 
 		tx, err := ebi.IndexPack(index, key, data...)
-		ifExit(err)
+		IfExit(err)
 
 		log.Printf("%s\n", tx)
 		return
 
 	} else {
 		err := fmt.Errorf("Unrecognized input method: %s\n", input)
-		ifExit(err)
+		IfExit(err)
 	}
 }
 
-func cliUnPack(c *cli.Context) {
-	input := c.String("input")
-	pp := c.Bool("pp")
-	args := c.Args()
+func cliUnPack(cmd *cobra.Command, args []string) {
+	input := InputFlag
+	pp := PPFlag
 
 	if input == "file" {
 		//When using file input methods, Get abi from file
@@ -74,7 +72,7 @@ func cliUnPack(c *cli.Context) {
 		data := args[2]
 
 		abs, err := ebi.FileUnPack(fname, name, data, pp)
-		ifExit(err)
+		IfExit(err)
 
 		log.Printf("%s\n", abs)
 		return
@@ -85,7 +83,7 @@ func cliUnPack(c *cli.Context) {
 		data := args[2]
 
 		abs, err := ebi.UnPacker(json, name, data, pp)
-		ifExit(err)
+		IfExit(err)
 
 		log.Printf("%s\n", abs)
 		return
@@ -96,83 +94,80 @@ func cliUnPack(c *cli.Context) {
 		data := args[2]
 
 		abs, err := ebi.HashUnPack(hash, name, data, pp)
-		ifExit(err)
+		IfExit(err)
 
 		log.Printf("%s\n", abs)
 		return
 	} else if input == "index" {
 		//The index input method uses the indexing system
-		index := c.String("index")
+		index := IndexFlag
 		key := args[0]
 		name := args[1]
 		data := args[2]
 
 		abs, err := ebi.IndexUnPack(index, key, name, data, pp)
-		ifExit(err)
+		IfExit(err)
 
 		log.Printf("%s\n", abs)
 		return
 
 	} else {
 		err := fmt.Errorf("Unrecognized input method: %s\n", input)
-		ifExit(err)
+		IfExit(err)
 	}
 }
 
-func cliImport(c *cli.Context) {
+func cliImport(cmd *cobra.Command, args []string) {
 	//Import an abi file into abi directory
-	args := c.Args()
 
-	if c.String("input") == "file" {
+	if InputFlag == "file" {
 		fname := args[0]
 
 		fpath, err := ebi.PathFromHere(fname)
-		ifExit(err)
+		IfExit(err)
 
 		abiData, abiHash, err := ebi.ReadAbiFile(fpath)
-		ifExit(err)
+		IfExit(err)
 
 		_, err = ebi.WriteAbi(abiData)
-		ifExit(err)
+		IfExit(err)
 
 		log.Printf("Imported Abi as %s\n", abiHash)
-	} else if c.String("input") == "json" {
+	} else if InputFlag == "json" {
 		json := []byte(args[0])
 		abiHash, err := ebi.WriteAbi(json)
-		ifExit(err)
+		IfExit(err)
 
 		log.Printf("Imported Abi as %s\n", abiHash)
 	}
 	return
 }
 
-func cliAdd(c *cli.Context) {
+func cliAdd(cmd *cobra.Command, args []string) {
 	//Add an entry to index
-	args := c.Args()
-	iname := c.String("index")
+	iname := IndexFlag
 	key := args[0]
 	value := args[1]
 
 	err := ebi.AddEntry(iname, key, value)
-	ifExit(err)
+	IfExit(err)
 
 	log.Printf("Added Entry %s as %s\n", value, key)
 	return
 }
 
-func cliNew(c *cli.Context) {
+func cliNew(cmd *cobra.Command, args []string) {
 	//Create new index
-	args := c.Args()
 	iname := args[0]
 
 	err := ebi.NewIndex(iname)
-	ifExit(err)
+	IfExit(err)
 
 	log.Printf("Created new index: %s\n", iname)
 	return
 }
 
-func cliServer(c *cli.Context) {
-	host, port := c.String("host"), c.String("port")
-	ifExit(ListenAndServe(host, port))
+func cliServer(cmd *cobra.Command, args []string) {
+	host, port := HostFlag, PortFlag
+	IfExit(ListenAndServe(host, port))
 }
