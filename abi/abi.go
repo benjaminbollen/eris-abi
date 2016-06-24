@@ -10,9 +10,9 @@ import (
 	"strconv"
 	"strings"
 
-	log "github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/ethereum/go-ethereum/crypto/sha3"
+	log "github.com/eris-ltd/eris-logger"
+	"github.com/eris-ltd/common/go/common"
+	"github.com/ethereum/go-ethereum/crypto/sha3"
 )
 
 var NullABI = ABI{}

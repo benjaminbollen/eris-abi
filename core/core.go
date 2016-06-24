@@ -7,8 +7,8 @@ import (
 
 	"github.com/eris-ltd/eris-abi/abi"
 
-	log "github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
+	log "github.com/eris-ltd/eris-logger"
+	"github.com/eris-ltd/common/go/common"
 )
 
 func PathFromHere(fname string) (string, error) {
