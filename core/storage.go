@@ -8,7 +8,7 @@ import (
 	"os"
 	"path"
 
-	log "github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/Sirupsen/logrus"
+	log "github.com/eris-ltd/eris-logger"
 )
 
 //This file is for storage and retrieval functions of abi's in abi subdirectory

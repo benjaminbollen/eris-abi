@@ -6,10 +6,9 @@ import (
 
 	ebi "github.com/eris-ltd/eris-abi/core"
 
-	log "github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	. "github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/eris-ltd/common/go/common"
-	logger "github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
-	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/spf13/cobra"
+	log "github.com/eris-ltd/eris-logger"
+	. "github.com/eris-ltd/common/go/common"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -114,7 +113,6 @@ var serverCmd = &cobra.Command{
 }
 
 func before(cmd *cobra.Command, args []string) {
-	log.SetFormatter(logger.ErisFormatter{})
 
 	// log.SetLevel(log.WarnLevel)
 	// if do.Verbose {
