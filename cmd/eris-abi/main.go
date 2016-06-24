@@ -6,9 +6,9 @@ import (
 
 	ebi "github.com/eris-ltd/eris-abi/core"
 
-	log "github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/Sirupsen/logrus"
-	"github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/codegangsta/cli"
-	logger "github.com/eris-ltd/eris-abi/Godeps/_workspace/src/github.com/eris-ltd/common/go/log"
+	log "github.com/eris-ltd/eris-logger"
+	. "github.com/eris-ltd/common/go/common"
+	"github.com/spf13/cobra"
 )
 
 var (
@@ -18,148 +18,118 @@ var (
 	DefaultHost = "localhost"
 	DefaultPort = "4592"
 	DefaultAddr = "http://" + DefaultHost + ":" + DefaultPort
+
+	// flags
+	IndexFlag string
+	InputFlag string
+	HostFlag  string
+	PortFlag  string
+	PPFlag    bool
 )
 
 func main() {
-	app := cli.NewApp()
-	app.Name = "ebi"
-	app.Usage = "Tool for using ABI's to construct transaction data"
-	app.Version = "0.0.1"
-	app.Author = "Dennis Mckinnon"
-	app.Email = "contact@erisindustries.com"
-	app.Commands = []cli.Command{
-		packCmd,
-		unpackCmd,
-		importCmd,
-		addCmd,
-		newCmd,
-		serverCmd,
-	}
+	BuildErisABICommand()
+	ErisABI.PersistentPreRun = before
+	//ErisABI.PersistentPostRun = after
+	ErisABI.Execute()
+}
 
-	app.Before = func(c *cli.Context) error {
-		log.SetFormatter(logger.ErisFormatter{})
+var ErisABI = &cobra.Command{
+	Use:   "eris-abi",
+	Short: "",
+	Long:  "",
+	Run:   func(cmd *cobra.Command, args []string) { cmd.Help() },
+}
 
-		// log.SetLevel(log.WarnLevel)
-		// if do.Verbose {
-		// 	log.SetLevel(log.InfoLevel)
-		// } else if do.Debug {
-		//  log.SetLevel(log.DebugLevel)
-		// }
+func BuildErisABICommand() {
+	ErisABI.AddCommand(packCmd)
+	ErisABI.AddCommand(unpackCmd)
+	ErisABI.AddCommand(importCmd)
+	ErisABI.AddCommand(addCmd)
+	ErisABI.AddCommand(newCmd)
+	ErisABI.AddCommand(serverCmd)
 
-		//Check directory structure exists. If not create it.
-		err := ebi.CheckDirTree()
-		if err != nil {
-			//Tree does not exist or is incomplete
-			log.Println("Abi directory tree incomplete... Creating it...")
-			err := ebi.BuildDirTree()
-			if err != nil {
-				log.Println("Could not build: %s", err)
-				return fmt.Errorf("Could not create directory tree")
-			}
-			log.Println("Directory tree built!")
+	addABIflags()
+
+}
+
+func addABIflags() {
+	packCmd.Flags().StringVarP(&InputFlag, "input", "", DefaultInput, "specify input method of ABI data.")
+	packCmd.Flags().StringVarP(&IndexFlag, "index", "i", DefaultIndex, "specify index to use as look-up.")
+
+	unpackCmd.Flags().StringVarP(&InputFlag, "input", "", DefaultInput, "specify input method of ABI data.")
+	unpackCmd.Flags().StringVarP(&IndexFlag, "index", "i", DefaultIndex, "specify index to use as look-up.")
+	unpackCmd.Flags().BoolVarP(&PPFlag, "pp", "p", false, "use json output rather than pretty print.")
+
+	importCmd.Flags().StringVarP(&InputFlag, "input", "", DefaultInput, "specify input method of ABI data.")
+
+	addCmd.Flags().StringVarP(&IndexFlag, "index", "i", DefaultIndex, "specify index to use as look-up.")
+
+	serverCmd.Flags().StringVarP(&PortFlag, "port", "", DefaultPort, "set the port for key daemon to listen on.")
+	serverCmd.Flags().StringVarP(&HostFlag, "host", "", DefaultHost, "set the host for key daemon to listen on.")
+
+}
+
+var packCmd = &cobra.Command{
+	Use:   "pack",
+	Short: "generate a transaction",
+	Long:  "generate a transaction",
+	Run:   cliPack,
+}
+
+var unpackCmd = &cobra.Command{
+	Use:   "unpack",
+	Short: "process contract return values",
+	Long:  "process contract return values",
+	Run:   cliUnPack,
+}
+
+var importCmd = &cobra.Command{
+	Use:   "import",
+	Short: "Import an existing ABI file into abi directory",
+	Long:  "Import an existing ABI file into abi directory",
+	Run:   cliImport,
+}
+
+var addCmd = &cobra.Command{
+	Use:   "add",
+	Short: "Add an entry to index",
+	Long:  "Add an entry to index",
+	Run:   cliAdd,
+}
+
+var newCmd = &cobra.Command{
+	Use:   "new",
+	Short: "Create new index",
+	Long:  "Create new index",
+	Run:   cliNew,
+}
+
+var serverCmd = &cobra.Command{
+	Use:   "server",
+	Short: "Starts a packing server",
+	Long:  "Starts a packing server",
+	Run:   cliServer,
+}
+
+func before(cmd *cobra.Command, args []string) {
+
+	// log.SetLevel(log.WarnLevel)
+	// if do.Verbose {
+	// 	log.SetLevel(log.InfoLevel)
+	// } else if do.Debug {
+	//  log.SetLevel(log.DebugLevel)
+	// }
+
+	//Check directory structure exists. If not create it.
+	if err := ebi.CheckDirTree(); err != nil {
+		//Tree does not exist or is incomplete
+		log.Println("Abi directory tree incomplete... Creating it...")
+		if err := ebi.BuildDirTree(); err != nil {
+			log.Println("Could not build: %s", err)
+			IfExit(fmt.Errorf("Could not create directory tree"))
 		}
-
-		return nil
+		log.Println("Directory tree built!")
 	}
 
-	app.Run(os.Args)
-
-}
-
-var (
-	packCmd = cli.Command{
-		Name:   "pack",
-		Usage:  "generate a transaction",
-		Action: cliPack,
-		Flags: []cli.Flag{
-			inputFlag,
-			indexFlag,
-		},
-	}
-
-	unpackCmd = cli.Command{
-		Name:   "unpack",
-		Usage:  "process contract return values",
-		Action: cliUnPack,
-		Flags: []cli.Flag{
-			inputFlag,
-			indexFlag,
-			ppFlag,
-		},
-	}
-
-	importCmd = cli.Command{
-		Name:   "import",
-		Usage:  "Import an existing ABI file into abi directory",
-		Action: cliImport,
-		Flags: []cli.Flag{
-			inputFlag,
-		},
-	}
-
-	addCmd = cli.Command{
-		Name:   "add",
-		Usage:  "Add an entry to index",
-		Action: cliAdd,
-		Flags: []cli.Flag{
-			indexFlag,
-		},
-	}
-
-	newCmd = cli.Command{
-		Name:   "new",
-		Usage:  "Create new index",
-		Action: cliNew,
-	}
-
-	serverCmd = cli.Command{
-		Name:   "server",
-		Usage:  "Starts a packing server",
-		Action: cliServer,
-		Flags: []cli.Flag{
-			hostFlag,
-			portFlag,
-		},
-	}
-
-	inputFlag = cli.StringFlag{
-		Name:  "input",
-		Value: DefaultInput,
-		Usage: "Specify input method of ABI data.",
-	}
-
-	indexFlag = cli.StringFlag{
-		Name:  "index, i",
-		Usage: "Specify index to use as look-up",
-		Value: DefaultIndex,
-	}
-
-	ppFlag = cli.BoolTFlag{
-		Name:  "pp, p",
-		Usage: "Turn off pretty print and use json output instead",
-	}
-
-	portFlag = cli.StringFlag{
-		Name:  "port",
-		Value: DefaultPort,
-		Usage: "set the port for key daemon to listen on",
-	}
-
-	hostFlag = cli.StringFlag{
-		Name:  "host",
-		Value: DefaultHost,
-		Usage: "set the host for key daemon to listen on",
-	}
-)
-
-func exit(err error) {
-	log.Println(err)
-	os.Exit(1)
-}
-
-func ifExit(err error) {
-	if err != nil {
-		log.Println(err)
-		os.Exit(1)
-	}
 }
