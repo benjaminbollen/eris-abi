@@ -1,5 +1,5 @@
-hash: e7d47b9f900ae5af9fd1f49870dc3815a477753b0c70b0b596c1ae9e19bd960a
-updated: 2016-06-24T16:11:33.177992573-05:00
+hash: 57c1e50349d6d1b2b6d273c5355fddf5e39224cae3230f90c061445e704f5f77
+updated: 2016-09-12T00:00:16.877138848-05:00
 imports:
 - name: github.com/Azure/go-ansiterm
   version: fa152c58bc15761d0200cb75fe958b89a9d4888e
@@ -16,8 +16,8 @@ imports:
 - name: github.com/docker/docker
   version: 7ff546467de3fa3d1c1104e9f40c6d16742ebac0
   subpackages:
-  - pkg/term
   - pkg/system
+  - pkg/term
   - pkg/term/windows
 - name: github.com/docker/go-units
   version: f2d77a61e3c169b43402a0a1e84f06daf29b8190
@@ -27,22 +27,30 @@ imports:
   - go/common
 - name: github.com/eris-ltd/eris-logger
   version: ea48a395d6ecc0eccc67a26da9fc7a6106fabb84
+- name: github.com/eris-ltd/eris-pm
+  version: 2d17c205ee6bb672f112bbc090f1af56303ea00e
+  subpackages:
+  - definitions
 - name: github.com/ethereum/go-ethereum
   version: 98be7cd8337fb9633af29510fc4e1e494bb839f2
   subpackages:
+  - common
+  - crypto
+  - crypto/ecies
+  - crypto/randentropy
+  - crypto/secp256k1
   - crypto/sha3
-- name: github.com/inconshreveable/mousetrap
-  version: 76626ae9c91c4f2a10f34cad8ce83ea42c93bb75
+  - rlp
 - name: github.com/mitchellh/go-homedir
   version: 756f7b183b7ab78acdbbee5c7f392838ed459dda
 - name: github.com/Sirupsen/logrus
   version: f3cfb454f4c209e6668c95216c4744b8fddb2356
-- name: github.com/spf13/cobra
-  version: 6a8bd97bdb1fc0d08a83459940498ea49d3e8c93
-- name: github.com/spf13/pflag
-  version: 367864438f1b1a3c7db4da06a2f55b144e6784e0
+- name: golang.org/x/crypto
+  version: 0e31b188fd38db611d4fbab7de9373a95f36aae5
+  subpackages:
+  - ripemd160
 - name: golang.org/x/sys
   version: 62bee037599929a6e9146f29d10dd5208c43507d
   subpackages:
   - unix
-devImports: []
+testImports: []
