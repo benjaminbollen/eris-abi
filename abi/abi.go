@@ -1,492 +1,24 @@
 package abi
 
 import (
-	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"io"
 	"math/big"
-	"regexp"
-	"strconv"
+	"reflect"
 	"strings"
-
-	log "github.com/eris-ltd/eris-logger"
-	"github.com/eris-ltd/common/go/common"
-	"github.com/ethereum/go-ethereum/crypto/sha3"
 )
-
-var NullABI = ABI{}
-
-// Callable method given a `Name` and whether the method is a constant.
-// If the method is `Const` no transaction needs to be created for this
-// particular Method call. It can easily be simulated using a local VM.
-// For example a `Balance()` method only needs to retrieve something
-// from the storage and therefor requires no Tx to be send to the
-// network. A method such as `Transact` does require a Tx and thus will
-// be flagged `true`.
-// Inputs specifies the required input parameters for this gives method.
-type Method struct {
-	Name     string // `json:"name"`
-	Constant bool
-	Inputs   []Argument // `json:"inputs"`
-	Outputs  []Argument // `json:"outputs"`
-	Type     string
-}
-
-type Argpairs struct {
-	Name  string
-	Type  string
-	Value string
-	VByte []byte
-}
-
-// Argument holds the name of the argument and the corresponding type.
-// Types are used when packing and testing arguments.
-type Argument struct {
-	Name string `json:"name"`
-	Type Type   `json:"type"`
-}
 
 // The ABI holds information about a contract's context and available
 // invokable methods. It will allow you to type check function calls and
 // packs data accordingly.
 type ABI struct {
-	Methods map[string]Method
+	Constructor Method
+	Methods     map[string]Method
+	Events      map[string]Event
 }
 
-// Returns the methods string signature according to the ABI spec.
-//
-// Example
-//
-//     function foo(uint32 a, int b)    =    "foo(uint32,int256)"
-//
-// Please note that "int" is substitute for its canonical representation "int256"
-func (m Method) String() (out string) {
-	if strings.Contains(m.Name, "(") && strings.Contains(m.Name, ")") {
-		return m.Name
-	}
-	out += m.Name
-	types := make([]string, len(m.Inputs))
-	i := 0
-	for _, input := range m.Inputs {
-		types[i] = input.Type.String()
-		i++
-	}
-	out += "(" + strings.Join(types, ",") + ")"
-
-	return
-}
-
-func (m Method) Id() []byte {
-	return Sha3([]byte(m.String()))[:4]
-}
-
-// Populates the parameters for packing according to the abi specification
-type PackType struct {
-	Name       string
-	Type       string
-	Raw        string
-	Dynamic    bool
-	Data       []byte
-	DataLength []byte
-	ArgNumber  int
-}
-
-// Pack the given method name to conform the ABI. Method call's data
-// will consist of method_id, args0, arg1, ... argN. Method id consists
-// of 4 bytes and arguments are all 32 bytes.
-// Method ids are created from the first 4 bytes of the hash of the
-// methods string signature. (signature = baz(uint32,string32))
-func (abi ABI) Pack(name string, data []string) ([]byte, error) {
-	method, exist := abi.Methods[name]
-	if !exist {
-		return nil, fmt.Errorf("method '%s' not found", name)
-	}
-
-	// start with argument count match
-	if len(data) != len(method.Inputs) {
-		return nil, fmt.Errorf("argument count mismatch: %d for %d", len(data), len(method.Inputs))
-	}
-
-	if len(data) == 0 {
-		log.Debug("Nothing to pack")
-	}
-
-	var packer []*PackType
-	var arguments []byte
-
-	for i, a := range data {
-		input := method.Inputs[i]
-
-		thisPacked := &PackType{}
-
-		thisPacked.Name = input.Name
-		thisPacked.Type = input.Type.String()
-		thisPacked.Raw = a
-		thisPacked.ArgNumber = i
-		log.WithField("=>", input).Debug("Method Inputs")
-		if input.Type.isSlice {
-			a := strings.Trim(a, "[]")
-			arrayElements := strings.Split(a, ",")
-
-			log.WithField("=>", len(arrayElements)).Debug("Length of Array")
-			for _, d := range arrayElements {
-				log.WithField("=>", d).Debug("Array element")
-				tempPacked := &PackType{}
-				
-				tempPacked.Raw = d
-				tempPacked.Type = thisPacked.Type
-				err := PackProcessType(tempPacked)
-				if err != nil {
-					return nil, err
-				}
-				thisPacked.Data = append(thisPacked.Data, tempPacked.Data...)
-				log.Info("We get past the append")
-			}
-			log.Info("We get past the loop")
-		} else {
-
-			log.WithFields(log.Fields{
-				"name":   thisPacked.Name,
-				"type":   thisPacked.Type,
-				"val":    thisPacked.Raw,
-				"argNum": thisPacked.ArgNumber,
-			}).Debug("ABI Pack")
-			err := PackProcessType(thisPacked)
-			if err != nil {
-				return nil, err
-			}
-		}
-		
-		packer = append(packer, thisPacked)
-		
-	}
-
-	arguments = ProcessPackedTypes(packer)
-
-	// Set function id; final formulation of call
-	packed := method.Id()
-	packed = append(packed, arguments...)
-
-	return packed, nil
-}
-
-// Order all the arguments as they should be ordered
-func ProcessPackedTypes(packer []*PackType) []byte {
-	var arguments []byte
-	var argumentsData []byte
-
-	// first we loop through and assemble the dynamic types
-	for _, thisPacked := range packer {
-		if !thisPacked.Dynamic {
-			continue // these will get populated in the next range through
-		} else {
-			argumentsData = append(argumentsData, thisPacked.DataLength...)
-			argumentsData = append(argumentsData, thisPacked.Data...)
-		}
-	}
-
-	// second we loop through and find the length pointers (dynamic types) and raw data (static types)
-	for i, thisPacked := range packer {
-		if !thisPacked.Dynamic {
-			arguments = append(arguments, thisPacked.Data...)
-		} else {
-			arguments = append(arguments, findOffset(packer, i)...)
-		}
-	}
-
-	return append(arguments, argumentsData...)
-}
-
-// Conversion to []byte based on "Type"
-// https://github.com/ethereum/wiki/wiki/Ethereum-Contract-ABI#formal-specification-of-the-encoding
-func PackProcessType(thisPacked *PackType) error {
-	t := getMajorType(thisPacked.Type)
-
-	switch t {
-	case "byte":
-		thisPacked.Dynamic = false
-		thisPacked.Data = common.RightPadBytes([]byte(thisPacked.Raw), lengths["retBlock"])
-		return nil
-	case "string":
-		thisPacked.Dynamic = true
-		thisPacked.DataLength = U2U256(uint64(len(thisPacked.Raw)))
-		thisPacked.Data = common.RightPadBytes([]byte(thisPacked.Raw), lengths["retBlock"])
-		return nil
-	case "uint":
-		thisPacked.Dynamic = false
-		val, err := strconv.ParseUint(thisPacked.Raw, 10, 64)
-		if err != nil {
-			return err
-		}
-		thisPacked.Data = U2U256(val)
-		return nil
-	case "int":
-		thisPacked.Dynamic = false
-		val, err := strconv.ParseInt(thisPacked.Raw, 10, 64)
-		if err != nil {
-			return err
-		}
-		thisPacked.Data = S2S256(val)
-		return nil
-	case "address":
-		thisPacked.Dynamic = false
-		thisPacked.Data = common.LeftPadBytes(common.AddressStringToBytes(thisPacked.Raw), lengths["retBlock"])
-		return nil
-	case "bool":
-		thisPacked.Dynamic = false
-		if thisPacked.Raw == "1" || thisPacked.Raw == "true" {
-			thisPacked.Data = common.LeftPadBytes(common.Big1.Bytes(), lengths["retBlock"])
-			return nil
-		} else {
-			thisPacked.Data = common.LeftPadBytes(common.Big0.Bytes(), lengths["retBlock"])
-			return nil
-		}
-	default:
-		return fmt.Errorf("Unknown type. Cannot pack.")
-	}
-}
-
-//Unpacking function
-func (abi ABI) UnPack(name string, data []byte) ([]byte, error) {
-	method, exist := abi.Methods[name]
-	if !exist {
-		return nil, fmt.Errorf("method '%s' not found", name)
-	}
-
-	ret := make([]Argpairs, len(method.Outputs))
-
-	//Note this assumes all return values are 32 bytes (If this is not correct, process type should return number of bytes consumed?)
-	start := 0
-	var next int
-	end := len(data)
-
-	for i := range method.Outputs {
-		
-		arrayLength := method.Outputs[i].Type.Size
-		_, ok := lengths[method.Outputs[i].Type.BaseType()]
-		if !ok {
-			return nil, fmt.Errorf("Unrecognized return type (%s)", method.Outputs[i].Type.BaseType())
-		}
-		log.WithField("=>", arrayLength).Debug("Array Length")
-		next = start + lengths["retBlock"]
-		if next > end {
-			log.WithFields(log.Fields{
-				"name":   ret[i].Name,
-				"type":   ret[i].Type,
-				"val":    ret[i].Value,
-				"len":    lengths[method.Outputs[i].Type.String()],
-				"retBlk": lengths["retBlock"],
-				"start":  start,
-				"next":   next,
-				"end":    end,
-			}).Error("Too little data")
-			return nil, fmt.Errorf("Too little data; usually means the wrong abi was used")
-		}
-
-		ret[i].Name = method.Outputs[i].Name
-		ret[i].Type = method.Outputs[i].Type.String()
-		var tempStringArray []string
-		for j := 0; j < arrayLength; j++ {
-			var tempValue string
-			next = start + lengths["retBlock"]
-			tempValue, next = UnpackProcessType(method.Outputs[i].Type.BaseType(), data[start:next], start)
-			start = next
-			tempStringArray = append(tempStringArray, tempValue)
-		}
-		if len(tempStringArray) > 1 {
-			ret[i].Value = "[" + strings.Join(tempStringArray, ",") + "]"
-		} else {
-			ret[i].Value = tempStringArray[0]
-		}
-		log.WithFields(log.Fields{
-			"name": ret[i].Name,
-			"type": ret[i].Type,
-			"val":  ret[i].Value,
-		}).Debug("ABI Unpack")
-		
-	}
-
-	if start != end {
-		log.WithFields(log.Fields{
-			"name":   ret[len(ret)-1].Name,
-			"type":   ret[len(ret)-1].Type,
-			"val":    ret[len(ret)-1].Value,
-			"len":    lengths[method.Outputs[len(ret)-1].Type.String()],
-			"retBlk": lengths["retBlock"],
-			"start":  start,
-			"next":   next,
-			"end":    end,
-		}).Error("Too much data")
-		return nil, fmt.Errorf("Too much data; usually this means difficulty in rendering the return from the contract")
-	}
-
-	retbytes, err := json.Marshal(ret)
-	if err != nil {
-		return nil, err
-	}
-
-	return retbytes, nil
-
-}
-
-//utility Functions
-
-//Conversion to string based on "Type"
-func UnpackProcessType(typ string, value []byte, start int) (string, int) {
-	t := getMajorType(typ)
-	log.Info("Hit UnpackProcessType")
-	switch t {
-	case "byte":
-		return string(common.UnRightPadBytes(value)), (start + lengths["retBlock"])
-	case "string":
-		return unpackByteArray(value, start)
-	case "uint":
-		val := common.StripZeros(common.BigD(value).String())
-		if val == "" {
-			return "0", (start + lengths["retBlock"])
-		}
-		return val, (start + lengths["retBlock"])
-	case "int":
-		// there is weird encoding solidity does with negative ints
-		//   it prepends with 01 instead of 00.
-		if value[0] == 1 {
-			i := 0
-			for ; i < len(value); i++ {
-				if value[i] != 1 {
-					break
-				}
-			}
-			val := common.BigD(value[i:]).String()
-			return ("-" + val), (start + lengths["retBlock"])
-		}
-
-		val := common.StripZeros(common.BigD(value).String())
-
-		// blank strings will be zero after all the decoding finishes
-		if val == "" {
-			return "0", (start + lengths["retBlock"])
-		}
-
-		return val, (start + lengths["retBlock"])
-	case "address":
-		return strings.ToUpper(hex.EncodeToString(common.Address(value))), (start + lengths["retBlock"])
-	case "bool":
-		return new(big.Int).SetBytes(value).String(), (start + lengths["retBlock"])
-	default:
-		return hex.EncodeToString(value), (start + lengths["retBlock"])
-	}
-}
-
-func unpackByteArray(value []byte, start int) (string, int) {
-	var next int
-
-	// first we get the bytes delimiter
-	next = start + lengths["retBlock"]
-	v1 := value[start:next]
-	delim, _ := strconv.Atoi(common.StripZeros(common.BigD(v1).String()))
-	start = next
-
-	// next we get the length of string
-	next = start + lengths["retBlock"]
-	v2 := value[start:next]
-	length, _ := strconv.Atoi(common.StripZeros(common.BigD(v2).String()))
-	start = next
-
-	// now we unmarshall
-	blocks := ((length - 1) / delim) + 1          // number of "chunks to use"
-	next = start + (lengths["retBlock"] * blocks) // how much of the byte array to use
-	var val string
-	if length%delim == 0 {
-		val = string(value[start:next]) // strings exactly length%32==0 do not marshall with UnRightPad
-	} else {
-		val = string(common.UnRightPadBytes(value[start:next]))
-	}
-	log.WithFields(log.Fields{
-		"len":      length,
-		"delimter": delim,
-		"val":      val,
-	}).Debug("Strings unpack")
-	return val, next
-}
-
-func findOffset(packer []*PackType, i int) []byte {
-	offset := len(packer) // number of arguments
-
-	if i == 0 {
-		return U2U256(uint64(32 * offset))
-	}
-	for i = i - 1; i >= 0; i-- { // loop thru backwards
-		if packer[i].Dynamic {
-			offset++                                     // data length slot
-			offset = offset + (len(packer[i].Data) / 32) // length of additional slots
-		}
-	}
-
-	return U2U256(uint64(32 * offset))
-}
-
-// ________ to we used these? ---------------------|
-
-func UnpackPrettyPrint(injson []byte) (string, error) {
-	var ret []Argpairs
-
-	err := json.Unmarshal(injson, &ret)
-	if err != nil {
-		return "", err
-	}
-
-	//Pretty print time
-	pps := ""
-	unc := int(1)
-	for _, A := range ret {
-		if A.Name == "" {
-			tname := "UVar" + strconv.Itoa(unc)
-			pps = pps + tname + " : " + A.Value
-			unc = unc + 1
-		} else {
-			pps = pps + A.Name + " : " + A.Value
-		}
-		pps = pps + "\n"
-	}
-
-	return pps, nil
-}
-
-//Fills an ABI object with umarshalled data.
-func (abi *ABI) UnmarshalJSON(data []byte) error {
-	var methods []Method
-	if err := json.Unmarshal(data, &methods); err != nil {
-		return err
-	}
-
-	abi.Methods = make(map[string]Method)
-	for _, method := range methods {
-		abi.Methods[method.Name] = method
-	}
-
-	return nil
-}
-
-func (a *Argument) UnmarshalJSON(data []byte) error {
-	var extarg struct {
-		Name string
-		Type string
-	}
-	err := json.Unmarshal(data, &extarg)
-	if err != nil {
-		return fmt.Errorf("argument json err: %v", err)
-	}
-
-	a.Type, err = NewType(extarg.Type)
-	if err != nil {
-		return err
-	}
-	a.Name = extarg.Name
-
-	return nil
-}
-
+// JSON returns a parsed ABI interface and error if it failed.
 func JSON(reader io.Reader) (ABI, error) {
 	dec := json.NewDecoder(reader)
 
@@ -498,41 +30,318 @@ func JSON(reader io.Reader) (ABI, error) {
 	return abi, nil
 }
 
-func Sha3(data []byte) []byte {
-	d := sha3.NewKeccak256()
-	d.Write(data)
+// Pack the given method name to conform the ABI. Method call's data
+// will consist of method_id, args0, arg1, ... argN. Method id consists
+// of 4 bytes and arguments are all 32 bytes.
+// Method ids are created from the first 4 bytes of the hash of the
+// methods string signature. (signature = baz(uint32,string32))
+func (abi ABI) Pack(name string, args ...interface{}) ([]byte, error) {
+	// Fetch the ABI of the requested method
+	var method Method
 
-	return d.Sum(nil)
+	if name == "" {
+		method = abi.Constructor
+	} else {
+		m, exist := abi.Methods[name]
+		if !exist {
+			return nil, fmt.Errorf("method '%s' not found", name)
+		}
+		method = m
+	}
+	arguments, err := method.pack(method, args...)
+	if err != nil {
+		return nil, err
+	}
+	// Pack up the method ID too if not a constructor and return
+	if name == "" {
+		return arguments, nil
+	}
+	return append(method.Id(), arguments...), nil
 }
 
-func getMajorType(typ string) string {
-	var t bool
-	if typ == "bytes" {
-		return "string"
+// toGoSliceType prses the input and casts it to the proper slice defined by the ABI
+// argument in T.
+func toGoSlice(i int, t Argument, output []byte) (interface{}, error) {
+	index := i * 32
+	// The slice must, at very least be large enough for the index+32 which is exactly the size required
+	// for the [offset in output, size of offset].
+	if index+32 > len(output) {
+		return nil, fmt.Errorf("abi: cannot marshal in to go slice: insufficient size output %d require %d", len(output), index+32)
 	}
-	t, _ = regexp.MatchString("byte", typ)
-	if t {
-		return "byte"
+	elem := t.Type.Elem
+
+	// first we need to create a slice of the type
+	var refSlice reflect.Value
+	switch elem.T {
+	case IntTy, UintTy, BoolTy: // int, uint, bool can all be of type big int.
+		refSlice = reflect.ValueOf([]*big.Int(nil))
+	case AddressTy: // address must be of slice Address
+		refSlice = reflect.ValueOf([]Address(nil))
+	case HashTy: // hash must be of slice hash
+		refSlice = reflect.ValueOf([]Hash(nil))
+	case FixedBytesTy:
+		refSlice = reflect.ValueOf([]byte(nil))
+	default: // no other types are supported
+		return nil, fmt.Errorf("abi: unsupported slice type %v", elem.T)
 	}
-	t, _ = regexp.MatchString("string", typ)
-	if t {
-		return "string"
+	// get the offset which determines the start of this array ...
+	offset := int(BytesToBig(output[index : index+32]).Uint64())
+	if offset+32 > len(output) {
+		return nil, fmt.Errorf("abi: cannot marshal in to go slice: offset %d would go over slice boundary (len=%d)", len(output), offset+32)
 	}
-	t, _ = regexp.MatchString("uint", typ) // Test uint first because int will also match uint
-	if t {
-		return "uint"
+
+	slice := output[offset:]
+	// ... starting with the size of the array in elements ...
+	size := int(BytesToBig(slice[:32]).Uint64())
+	slice = slice[32:]
+	// ... and make sure that we've at the very least the amount of bytes
+	// available in the buffer.
+	if size*32 > len(slice) {
+		return nil, fmt.Errorf("abi: cannot marshal in to go slice: insufficient size output %d require %d", len(output), offset+32+size*32)
 	}
-	t, _ = regexp.MatchString("int", typ)
-	if t {
-		return "int"
+
+	// reslice to match the required size
+	slice = slice[:(size * 32)]
+	for i := 0; i < size; i++ {
+		var (
+			inter        interface{}             // interface type
+			returnOutput = slice[i*32 : i*32+32] // the return output
+		)
+
+		// set inter to the correct type (cast)
+		switch elem.T {
+		case IntTy, UintTy:
+			inter = BytesToBig(returnOutput)
+		case BoolTy:
+			inter = BytesToBig(returnOutput).Uint64() > 0
+		case AddressTy:
+			inter = BytesToAddress(returnOutput)
+		case HashTy:
+			inter = BytesToHash(returnOutput)
+		}
+		// append the item to our reflect slice
+		refSlice = reflect.Append(refSlice, reflect.ValueOf(inter))
 	}
-	t, _ = regexp.MatchString("address", typ)
-	if t {
-		return "address"
+
+	// return the interface
+	return refSlice.Interface(), nil
+}
+
+// toGoType parses the input and casts it to the proper type defined by the ABI
+// argument in T.
+func toGoType(i int, t Argument, output []byte) (interface{}, error) {
+	// we need to treat slices differently
+	if (t.Type.IsSlice || t.Type.IsArray) && t.Type.T != BytesTy && t.Type.T != StringTy && t.Type.T != FixedBytesTy {
+		return toGoSlice(i, t, output)
 	}
-	t, _ = regexp.MatchString("bool", typ)
-	if t {
-		return "bool"
+
+	index := i * 32
+	if index+32 > len(output) {
+		return nil, fmt.Errorf("abi: cannot marshal in to go type: length insufficient %d require %d", len(output), index+32)
 	}
-	return "unknown"
+
+	// Parse the given index output and check whether we need to read
+	// a different offset and length based on the type (i.e. string, bytes)
+	var returnOutput []byte
+	switch t.Type.T {
+	case StringTy, BytesTy: // variable arrays are written at the end of the return bytes
+		// parse offset from which we should start reading
+		offset := int(BytesToBig(output[index : index+32]).Uint64())
+		if offset+32 > len(output) {
+			return nil, fmt.Errorf("abi: cannot marshal in to go type: length insufficient %d require %d", len(output), offset+32)
+		}
+		// parse the size up until we should be reading
+		size := int(BytesToBig(output[offset : offset+32]).Uint64())
+		if offset+32+size > len(output) {
+			return nil, fmt.Errorf("abi: cannot marshal in to go type: length insufficient %d require %d", len(output), offset+32+size)
+		}
+
+		// get the bytes for this return value
+		returnOutput = output[offset+32 : offset+32+size]
+	default:
+		returnOutput = output[index : index+32]
+	}
+
+	// convert the bytes to whatever is specified by the ABI.
+	switch t.Type.T {
+	case IntTy, UintTy:
+		bigNum := BytesToBig(returnOutput)
+
+		// If the type is a integer convert to the integer type
+		// specified by the ABI.
+		switch t.Type.Kind {
+		case reflect.Uint8:
+			return uint8(bigNum.Uint64()), nil
+		case reflect.Uint16:
+			return uint16(bigNum.Uint64()), nil
+		case reflect.Uint32:
+			return uint32(bigNum.Uint64()), nil
+		case reflect.Uint64:
+			return uint64(bigNum.Uint64()), nil
+		case reflect.Int8:
+			return int8(bigNum.Int64()), nil
+		case reflect.Int16:
+			return int16(bigNum.Int64()), nil
+		case reflect.Int32:
+			return int32(bigNum.Int64()), nil
+		case reflect.Int64:
+			return int64(bigNum.Int64()), nil
+		case reflect.Ptr:
+			return bigNum, nil
+		}
+	case BoolTy:
+		return BytesToBig(returnOutput).Uint64() > 0, nil
+	case AddressTy:
+		return BytesToAddress(returnOutput), nil
+	case HashTy:
+		return BytesToHash(returnOutput), nil
+	case BytesTy, FixedBytesTy:
+		return returnOutput, nil
+	case StringTy:
+		return string(returnOutput), nil
+	}
+	return nil, fmt.Errorf("abi: unknown type %v", t.Type.T)
+}
+
+// these variable are used to determine certain types during type assertion for
+// assignment.
+var (
+	r_interSlice = reflect.TypeOf([]interface{}{})
+	r_hash       = reflect.TypeOf(Hash{})
+	r_bytes      = reflect.TypeOf([]byte{})
+	r_byte       = reflect.TypeOf(byte(0))
+)
+
+// Unpack output in v according to the abi specification
+func (abi ABI) Unpack(v interface{}, name string, output []byte) error {
+	var method = abi.Methods[name]
+
+	if len(output) == 0 {
+		return fmt.Errorf("abi: unmarshalling empty output")
+	}
+
+	// make sure the passed value is a pointer
+	valueOf := reflect.ValueOf(v)
+	if reflect.Ptr != valueOf.Kind() {
+		return fmt.Errorf("abi: Unpack(non-pointer %T)", v)
+	}
+
+	var (
+		value = valueOf.Elem()
+		typ   = value.Type()
+	)
+
+	if len(method.Outputs) > 1 {
+		switch value.Kind() {
+		// struct will match named return values to the struct's field
+		// names
+		case reflect.Struct:
+			for i := 0; i < len(method.Outputs); i++ {
+				marshalledValue, err := toGoType(i, method.Outputs[i], output)
+				if err != nil {
+					return err
+				}
+				reflectValue := reflect.ValueOf(marshalledValue)
+
+				for j := 0; j < typ.NumField(); j++ {
+					field := typ.Field(j)
+					// TODO read tags: `abi:"fieldName"`
+					if field.Name == strings.ToUpper(method.Outputs[i].Name[:1])+method.Outputs[i].Name[1:] {
+						if err := set(value.Field(j), reflectValue, method.Outputs[i]); err != nil {
+							return err
+						}
+					}
+				}
+			}
+		case reflect.Slice:
+			if !value.Type().AssignableTo(r_interSlice) {
+				return fmt.Errorf("abi: cannot marshal tuple in to slice %T (only []interface{} is supported)", v)
+			}
+
+			// if the slice already contains values, set those instead of the interface slice itself.
+			if value.Len() > 0 {
+				if len(method.Outputs) > value.Len() {
+					return fmt.Errorf("abi: cannot marshal in to slices of unequal size (require: %v, got: %v)", len(method.Outputs), value.Len())
+				}
+
+				for i := 0; i < len(method.Outputs); i++ {
+					marshalledValue, err := toGoType(i, method.Outputs[i], output)
+					if err != nil {
+						return err
+					}
+					reflectValue := reflect.ValueOf(marshalledValue)
+					if err := set(value.Index(i).Elem(), reflectValue, method.Outputs[i]); err != nil {
+						return err
+					}
+				}
+				return nil
+			}
+
+			// create a new slice and start appending the unmarshalled
+			// values to the new interface slice.
+			z := reflect.MakeSlice(typ, 0, len(method.Outputs))
+			for i := 0; i < len(method.Outputs); i++ {
+				marshalledValue, err := toGoType(i, method.Outputs[i], output)
+				if err != nil {
+					return err
+				}
+				z = reflect.Append(z, reflect.ValueOf(marshalledValue))
+			}
+			value.Set(z)
+		default:
+			return fmt.Errorf("abi: cannot unmarshal tuple in to %v", typ)
+		}
+
+	} else {
+		marshalledValue, err := toGoType(0, method.Outputs[0], output)
+		if err != nil {
+			return err
+		}
+		if err := set(value, reflect.ValueOf(marshalledValue), method.Outputs[0]); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (abi *ABI) UnmarshalJSON(data []byte) error {
+	var fields []struct {
+		Type     string
+		Name     string
+		Constant bool
+		Indexed  bool
+		Inputs   []Argument
+		Outputs  []Argument
+	}
+
+	if err := json.Unmarshal(data, &fields); err != nil {
+		return err
+	}
+
+	abi.Methods = make(map[string]Method)
+	abi.Events = make(map[string]Event)
+	for _, field := range fields {
+		switch field.Type {
+		case "constructor":
+			abi.Constructor = Method{
+				Inputs: field.Inputs,
+			}
+		// empty defaults to function according to the abi spec
+		case "function", "":
+			abi.Methods[field.Name] = Method{
+				Name:    field.Name,
+				Const:   field.Constant,
+				Inputs:  field.Inputs,
+				Outputs: field.Outputs,
+			}
+		case "event":
+			abi.Events[field.Name] = Event{
+				Name:   field.Name,
+				Inputs: field.Inputs,
+			}
+		}
+	}
+
+	return nil
 }
