@@ -1,6 +1,7 @@
 package ebi
 
 import (
+	"math/big"
 	"fmt"
 	"strings"
 	"reflect"
@@ -8,6 +9,7 @@ import (
 	"github.com/eris-ltd/eris-abi/abi"
 
 	log "github.com/eris-ltd/eris-logger"
+	"github.com/eris-ltd/common/go/common"
 	pmDefinitions "github.com/eris-ltd/eris-pm/definitions"
 )
 
@@ -46,7 +48,11 @@ func Unpacker(abiData, name string, data []byte) ([]*pmDefinitions.Variable, err
 		return []*pmDefinitions.Variable{}, err
 	}
 
-	unpacked, err := createOutputInterface(abiSpec, name)
+	//unpacked, err := createOutputInterface(abiSpec, name)
+	//if err != nil {
+	//	return nil, err
+	//}
+	var unpacked interface{}
 	err = abiSpec.Unpack(&unpacked, name, data)
 	if err != nil {
 		return []*pmDefinitions.Variable{}, err
@@ -69,22 +75,37 @@ func createOutputInterface(abiSpec abi.ABI, methodName string) ([]interface{}, e
 	}
 	
 	for _, output := range method.Outputs {
-		typ := output.Type.Type
-		outputInterface = append(outputInterface, reflect.New(typ))
+		typ := output.Type
+		outputInterface = append(outputInterface, typ)
 	}
 	return outputInterface, nil
 }
 
-func formatUnpackedReturn(abiSpec abi.ABI, methodName string, values []interface{}) ([]*pmDefinitions.Variable, error) {
+func formatUnpackedReturn(abiSpec abi.ABI, methodName string, values ...interface{}) ([]*pmDefinitions.Variable, error) {
 	var returnVars []*pmDefinitions.Variable
 	method, exist := abiSpec.Methods[methodName]
 	if !exist {
 		return nil, fmt.Errorf("method '%s' not found", methodName)
 	}
 	for i, output := range method.Outputs {
+		v := reflect.ValueOf(values[i])
+
+		var StringVal string
+		if v.Kind() == reflect.Ptr {
+			bigInt := v.Interface().(*big.Int)
+			switch output.Type.String()[:3] {
+			case "int":
+				StringVal = common.S256(bigInt).String()
+			case "uin":
+				StringVal = common.U256(bigInt).String()
+			}
+			
+		} else {
+			StringVal = fmt.Sprintf("%v", values[i])
+		}
 		arg := &pmDefinitions.Variable{
 				Name: output.Name,
-				Value: fmt.Sprintf("%v", values[i]),
+				Value: StringVal,
 			}
 		returnVars = append(returnVars, arg)
 	}

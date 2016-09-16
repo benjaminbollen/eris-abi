@@ -46,7 +46,7 @@ func U256(n *big.Int) []byte {
 }
 
 // packNum packs the given number (using the reflect value) and will cast it to appropriate number representation
-func packNum(value reflect.Value) []byte {
+func PackNum(value reflect.Value) []byte {
 	switch kind := value.Kind(); kind {
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
 		return U256(new(big.Int).SetUint64(value.Uint()))
