@@ -41,11 +41,11 @@ func Packer(abiData, funcName string, args ...interface{}) ([]byte, error) {
 	return packedBytes, nil
 }
 
-func Unpacker(abiData, name string, data []byte) ([]*pmDefinitions.Variable, error) {
+func Unpacker(abiData, name string, data []byte) ([]pmDefinitions.Variable, error) {
 
 	abiSpec, err := MakeAbi(abiData)
 	if err != nil {
-		return []*pmDefinitions.Variable{}, err
+		return []pmDefinitions.Variable{}, err
 	}
 
 	//unpacked, err := createOutputInterface(abiSpec, name)
@@ -55,7 +55,7 @@ func Unpacker(abiData, name string, data []byte) ([]*pmDefinitions.Variable, err
 	var unpacked interface{}
 	err = abiSpec.Unpack(&unpacked, name, data)
 	if err != nil {
-		return []*pmDefinitions.Variable{}, err
+		return []pmDefinitions.Variable{}, err
 	}
 
 	return formatUnpackedReturn(abiSpec, name, unpacked)
@@ -81,8 +81,8 @@ func createOutputInterface(abiSpec abi.ABI, methodName string) ([]interface{}, e
 	return outputInterface, nil
 }
 
-func formatUnpackedReturn(abiSpec abi.ABI, methodName string, values ...interface{}) ([]*pmDefinitions.Variable, error) {
-	var returnVars []*pmDefinitions.Variable
+func formatUnpackedReturn(abiSpec abi.ABI, methodName string, values ...interface{}) ([]pmDefinitions.Variable, error) {
+	var returnVars []pmDefinitions.Variable
 	method, exist := abiSpec.Methods[methodName]
 	if !exist {
 		return nil, fmt.Errorf("method '%s' not found", methodName)
@@ -91,20 +91,27 @@ func formatUnpackedReturn(abiSpec abi.ABI, methodName string, values ...interfac
 		v := reflect.ValueOf(values[i])
 
 		var StringVal string
-		if v.Kind() == reflect.Ptr {
+		fmt.Println("Kind: ", v.Kind().String())
+		fmt.Println(values[i])
+		if v.Kind() == reflect.String {
+			StringVal = fmt.Sprintf("%v", values[i])
+		} else if v.Kind() == reflect.Ptr {
 			bigInt := v.Interface().(*big.Int)
 			switch output.Type.String()[:3] {
 			case "int":
 				StringVal = common.S256(bigInt).String()
 			case "uin":
 				StringVal = common.U256(bigInt).String()
-			}
-			
+			}	
 		} else {
 			StringVal = fmt.Sprintf("%v", values[i])
 		}
-		arg := &pmDefinitions.Variable{
-				Name: output.Name,
+		name := output.Name
+		if output.Name == "" {
+			name = string(i)
+		}
+		arg := pmDefinitions.Variable{
+				Name: name,
 				Value: StringVal,
 			}
 		returnVars = append(returnVars, arg)
